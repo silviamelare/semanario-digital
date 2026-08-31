@@ -99,6 +99,28 @@
                     {% endfor %}
                 </div>
             </section>
+                        <section class="fotos-semana" aria-labelledby="titulo-fotos">
+                <h3 id="titulo-fotos">Fotos da semana</h3>
+                <p>
+                    Selecione uma ou mais fotos. O sistema organizará as imagens
+                    automaticamente.
+                </p>
+
+                <div class="campo">
+                    <label for="fotos">Selecionar fotos</label>
+                    <input type="file"
+                           id="fotos"
+                           name="fotos"
+                           accept="image/*"
+                           multiple>
+                    <small>Formatos de imagem aceitos pelo dispositivo.</small>
+                </div>
+
+                <div id="pre-visualizacao"
+                     class="grade-fotos"
+                     aria-live="polite">
+                </div>
+            </section>
         </form>
     </section>
 </main>
