@@ -236,3 +236,47 @@ main h2 {
         pointer-events: auto;
     }
 }
+.acoes-formulario {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+#botao-salvar {
+    min-height: 48px;
+    padding: 12px 24px;
+    color: #ffffff;
+    background-color: #2f6f64;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#botao-salvar:hover,
+#botao-salvar:focus {
+    background-color: #24564e;
+    outline: 3px solid #b8ddd5;
+}
+
+#botao-salvar:disabled {
+    color: #e6ecea;
+    background-color: #728b86;
+    cursor: wait;
+}
+
+#mensagem-salvamento {
+    margin: 0;
+    font-weight: bold;
+}
+
+.mensagem-sucesso {
+    color: #176b3a;
+}
+
+.mensagem-erro {
+    color: #a12626;
+}

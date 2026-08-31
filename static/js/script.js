@@ -137,3 +137,49 @@ function formatarTamanho(bytes) {
     const tamanhoEmKb = Math.max(1, Math.round(bytes / 1024));
     return `${tamanhoEmKb} KB`;
 }
+const formulario = document.querySelector("#form-semanario");
+const botaoSalvar = document.querySelector("#botao-salvar");
+const mensagemSalvamento = document.querySelector("#mensagem-salvamento");
+
+
+formulario.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    mensagemSalvamento.textContent = "";
+    mensagemSalvamento.className = "";
+
+    botaoSalvar.disabled = true;
+    botaoSalvar.textContent = "Salvando...";
+
+    const dados = new FormData(formulario);
+
+    dados.delete("fotos");
+
+    fotosPreparadas.forEach((foto) => {
+        dados.append("fotos", foto, foto.name);
+    });
+
+    try {
+        const resposta = await fetch("/api/semanarios", {
+            method: "POST",
+            body: dados
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(resultado.erro || "Não foi possível salvar.");
+        }
+
+        mensagemSalvamento.textContent = resultado.mensagem;
+        mensagemSalvamento.className = "mensagem-sucesso";
+
+        formulario.dataset.semanarioId = resultado.id;
+    } catch (erro) {
+        mensagemSalvamento.textContent = erro.message;
+        mensagemSalvamento.className = "mensagem-erro";
+    } finally {
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar semanário";
+    }
+});

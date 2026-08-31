@@ -17,7 +17,7 @@
         <h2 id="titulo-planejamento">Planejamento semanal</h2>
         <p>Preencha e acompanhe os registros da turma durante toda a semana.</p>
 
-        <form>
+        <form id="form-semanario" enctype="multipart/form-data">
             <div class="grade-identificacao">
                 <div class="campo">
                     <label for="professora">Professora</label>
@@ -121,6 +121,16 @@
                      aria-live="polite">
                 </div>
             </section>
+                        <div class="acoes-formulario">
+                <button type="submit" id="botao-salvar">
+                    Salvar semanário
+                </button>
+
+                <p id="mensagem-salvamento"
+                   role="status"
+                   aria-live="polite">
+                </p>
+            </div>
         </form>
     </section>
 </main>
