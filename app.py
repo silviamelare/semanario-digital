@@ -5,7 +5,14 @@ app = Flask(__name__)
 
 @app.route("/")
 def inicio():
-    return render_template("index.html")
+    dias_semana = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira"
+    ]
+    return render_template("index.html", dias=dias_semana)
 
 
 if __name__ == "__main__":
