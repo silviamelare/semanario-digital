@@ -280,3 +280,128 @@ main h2 {
 .mensagem-erro {
     color: #a12626;
 }
+.cabecalho-pagina {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.botao-link,
+.abrir-semanario {
+    display: inline-block;
+    padding: 11px 18px;
+    color: #ffffff;
+    background-color: #2f6f64;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.botao-link:hover,
+.botao-link:focus,
+.abrir-semanario:hover,
+.abrir-semanario:focus {
+    background-color: #24564e;
+    outline: 3px solid #b8ddd5;
+}
+
+.lista-semanarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 28px;
+}
+
+.cartao-semanario {
+    padding: 20px;
+    background-color: #f8fbfa;
+    border: 1px solid #cbd8d5;
+    border-top: 5px solid #2f6f64;
+    border-radius: 10px;
+}
+
+.cartao-semanario h3 {
+    margin-top: 0;
+    color: #2f6f64;
+}
+
+.cartao-semanario dl {
+    margin: 0 0 20px;
+}
+
+.cartao-semanario dl div {
+    margin-bottom: 12px;
+}
+
+.cartao-semanario dt {
+    font-size: 14px;
+    font-weight: bold;
+    color: #586663;
+}
+
+.cartao-semanario dd {
+    margin: 3px 0 0;
+}
+
+.estado-vazio {
+    margin-top: 28px;
+    padding: 24px;
+    text-align: center;
+    background-color: #f8fbfa;
+    border: 1px dashed #7ba99f;
+    border-radius: 8px;
+}
+.detalhes-identificacao {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+    padding: 20px;
+    background-color: #f8fbfa;
+    border: 1px solid #cbd8d5;
+    border-radius: 10px;
+}
+
+.detalhes-identificacao div {
+    min-width: 0;
+}
+
+.detalhes-identificacao dt {
+    font-size: 14px;
+    font-weight: bold;
+    color: #586663;
+}
+
+.detalhes-identificacao dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.registro-salvo + .registro-salvo {
+    margin-top: 18px;
+}
+
+.registro-salvo h5 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    color: #37474f;
+}
+
+.registro-salvo p {
+    min-height: 70px;
+    margin: 0;
+    padding: 10px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background-color: #ffffff;
+    border: 1px solid #cbd8d5;
+    border-radius: 8px;
+}
+.atalhos-pagina {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}

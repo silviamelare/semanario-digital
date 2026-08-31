@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semanários salvos</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+        {% set periodos = {
+        "manha": "Manhã",
+        "tarde": "Tarde"
+    } %}
+
+    {% set ciclos = {
+        "bercario": "Berçário",
+        "inicial": "1º Inicial",
+        "final": "1º Final"
+    } %}
+    <header>
+        <h1>Semanário Digital</h1>
+        <p>Educação Infantil</p>
+    </header>
+
+    <main>
+        <div class="cabecalho-pagina">
+            <div>
+                <h2>Semanários salvos</h2>
+                <p>Escolha um registro para abrir e conferir.</p>
+            </div>
+
+            <a class="botao-link" href="{{ url_for('inicio') }}">
+                Novo semanário
+            </a>
+        </div>
+
+        {% if semanarios %}
+        <div class="lista-semanarios">
+            {% for semanario in semanarios %}
+            <article class="cartao-semanario">
+                <h3>{{ semanario["turma"] }}</h3>
+
+                <dl>
+                    <div>
+                        <dt>Professora</dt>
+                        <dd>{{ semanario["professora"] }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Período</dt>
+                        <dd>{{ periodos.get(
+    semanario["periodo"],
+    semanario["periodo"]
+) }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Ciclo</dt>
+                        <dd>{{ ciclos.get(
+    semanario["ciclo"],
+    semanario["ciclo"]
+) }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Início da semana</dt>
+                        <dd>
+    {{ semanario["inicio_semana"][8:10] }}/{{ semanario["inicio_semana"][5:7] }}/{{ semanario["inicio_semana"][0:4] }}
+</dd>
+                    </div>
+                </dl>
+
+                <a class="abrir-semanario"
+                   href="{{ url_for(
+                       'visualizar_semanario',
+                       semanario_id=semanario['id']
+                   ) }}">
+                    Abrir semanário
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="estado-vazio">
+            Nenhum semanário foi salvo ainda.
+        </p>
+        {% endif %}
+    </main>
+</body>
+</html>

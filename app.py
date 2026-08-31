@@ -1,7 +1,14 @@
 from pathlib import Path
 from uuid import uuid4
 
-from flask import Flask, jsonify, render_template, request
+from flask import (
+    Flask,
+    abort,
+    jsonify,
+    render_template,
+    request,
+    send_from_directory
+)
 
 from database import conectar, criar_banco
 
@@ -23,6 +30,84 @@ def inicio():
         "Sexta-feira"
     ]
     return render_template("index.html", dias=dias_semana)
+@app.get("/semanarios")
+def listar_semanarios():
+    with conectar() as conexao:
+        semanarios = conexao.execute(
+            """
+            SELECT
+                id,
+                professora,
+                turma,
+                periodo,
+                ciclo,
+                inicio_semana
+            FROM semanarios
+            ORDER BY inicio_semana DESC, id DESC
+            """
+        ).fetchall()
+
+    return render_template(
+        "lista.html",
+        semanarios=semanarios
+    )
+
+
+@app.get("/semanarios/<int:semanario_id>")
+def visualizar_semanario(semanario_id):
+    with conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT *
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,)
+        ).fetchone()
+
+        if semanario is None:
+            abort(404)
+
+        registros = conexao.execute(
+            """
+            SELECT *
+            FROM registros_diarios
+            WHERE semanario_id = ?
+            ORDER BY dia_numero
+            """,
+            (semanario_id,)
+        ).fetchall()
+
+        fotos = conexao.execute(
+            """
+            SELECT *
+            FROM fotos
+            WHERE semanario_id = ?
+            ORDER BY id
+            """,
+            (semanario_id,)
+        ).fetchall()
+
+    dias_semana = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira"
+    ]
+
+    return render_template(
+        "detalhe.html",
+        semanario=semanario,
+        registros=registros,
+        fotos=fotos,
+        dias=dias_semana
+    )
+
+
+@app.get("/uploads/<path:nome_arquivo>")
+def mostrar_upload(nome_arquivo):
+    return send_from_directory(PASTA_UPLOADS, nome_arquivo)
 
 @app.post("/api/semanarios")
 def salvar_semanario():

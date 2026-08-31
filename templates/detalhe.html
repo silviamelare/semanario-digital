@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semanário de {{ semanario["turma"] }}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% set periodos = {
+        "manha": "Manhã",
+        "tarde": "Tarde"
+    } %}
+
+    {% set ciclos = {
+        "bercario": "Berçário",
+        "inicial": "1º Inicial",
+        "final": "1º Final"
+    } %}
+
+    <header>
+        <h1>Semanário Digital</h1>
+        <p>Educação Infantil</p>
+    </header>
+
+    <main>
+        <div class="cabecalho-pagina">
+            <div>
+                <h2>{{ semanario["turma"] }}</h2>
+                <p>Semanário salvo</p>
+            </div>
+
+            <a class="botao-link"
+               href="{{ url_for('listar_semanarios') }}">
+                Voltar para a lista
+            </a>
+        </div>
+
+        <dl class="detalhes-identificacao">
+            <div>
+                <dt>Professora</dt>
+                <dd>{{ semanario["professora"] }}</dd>
+            </div>
+
+            <div>
+                <dt>Período</dt>
+                <dd>{{ periodos.get(
+                    semanario["periodo"],
+                    semanario["periodo"]
+                ) }}</dd>
+            </div>
+
+            <div>
+                <dt>Ciclo</dt>
+                <dd>{{ ciclos.get(
+                    semanario["ciclo"],
+                    semanario["ciclo"]
+                ) }}</dd>
+            </div>
+
+            <div>
+                <dt>Início da semana</dt>
+                <dd>
+                    {{ semanario["inicio_semana"][8:10] }}/{{ semanario["inicio_semana"][5:7] }}/{{ semanario["inicio_semana"][0:4] }}
+                </dd>
+            </div>
+        </dl>
+
+        <section class="semana" aria-labelledby="titulo-registros">
+            <h3 id="titulo-registros">Registros da semana</h3>
+
+            <div class="dias-semana">
+                {% for registro in registros %}
+                <article class="dia">
+                    <h4>{{ dias[registro["dia_numero"] - 1] }}</h4>
+
+                    <div class="registro-salvo">
+                        <h5>Proposta</h5>
+                        <p>{{ registro["proposta"] or "" }}</p>
+                    </div>
+
+                    <div class="registro-salvo">
+                        <h5>Intencionalidade</h5>
+                        <p>{{ registro["intencionalidade"] or "" }}</p>
+                    </div>
+
+                    <div class="registro-salvo">
+                        <h5>Desenvolvimento</h5>
+                        <p>{{ registro["desenvolvimento"] or "" }}</p>
+                    </div>
+
+                    <div class="registro-salvo">
+                        <h5>Observação / Replanejamento</h5>
+                        <p>{{ registro["observacao"] or "" }}</p>
+                    </div>
+
+                    <div class="registro-salvo">
+                        <h5>Registro Reflexivo</h5>
+                        <p>{{ registro["registro_reflexivo"] or "" }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="fotos-semana" aria-labelledby="titulo-fotos-salvas">
+            <h3 id="titulo-fotos-salvas">Fotos da semana</h3>
+
+            {% if fotos %}
+            <div class="grade-fotos">
+                {% for foto in fotos %}
+                <figure class="foto-selecionada">
+                    <img src="{{ url_for(
+                             'mostrar_upload',
+                             nome_arquivo=foto['caminho']
+                         ) }}"
+                         alt="Foto salva: {{ foto['nome_arquivo'] }}">
+                    <figcaption>{{ foto["nome_arquivo"] }}</figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>Nenhuma foto foi adicionada.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>
