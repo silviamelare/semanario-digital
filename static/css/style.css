@@ -1,0 +1,39 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #263238;
+    background-color: #f4f7f6;
+}
+
+header {
+    padding: 24px 40px;
+    color: #ffffff;
+    background-color: #2f6f64;
+}
+
+header h1 {
+    margin: 0 0 6px;
+}
+
+header p {
+    margin: 0;
+}
+
+main {
+    width: calc(100% - 32px);
+    max-width: 1200px;
+    margin: 32px auto;
+    padding: 32px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+main h2 {
+    margin-top: 0;
+    color: #2f6f64;
+}
