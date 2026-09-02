@@ -2,27 +2,34 @@ const campoFotos = document.querySelector("#fotos");
 const gradeFotos = document.querySelector("#pre-visualizacao");
 
 let fotosPreparadas = [];
+const chavesFotos = new Set();
 
 if (campoFotos && gradeFotos) {
     campoFotos.addEventListener("change", async (evento) => {
         const arquivos = Array.from(evento.target.files || []);
-
-        gradeFotos.innerHTML = "";
-        fotosPreparadas = [];
 
         for (const arquivo of arquivos) {
             if (!arquivo.type.startsWith("image/")) {
                 continue;
             }
 
+            const chaveFoto = `${arquivo.name}-${arquivo.size}-${arquivo.lastModified}`;
+
+            if (chavesFotos.has(chaveFoto)) {
+                continue;
+            }
+
             try {
                 const fotoComprimida = await comprimirImagem(arquivo);
                 fotosPreparadas.push(fotoComprimida);
-                mostrarFoto(fotoComprimida);
+                chavesFotos.add(chaveFoto);
+                mostrarFoto(fotoComprimida, chaveFoto);
             } catch (erro) {
                 console.error("Não foi possível preparar a foto:", erro);
             }
         }
+
+        campoFotos.value = "";
     });
 }
 
@@ -85,7 +92,7 @@ function comprimirImagem(arquivo) {
     });
 }
 
-function mostrarFoto(arquivo) {
+function mostrarFoto(arquivo, chaveFoto) {
     const enderecoTemporario = URL.createObjectURL(arquivo);
 
     const figura = document.createElement("figure");
@@ -122,10 +129,12 @@ function mostrarFoto(arquivo) {
         `Excluir a foto ${arquivo.name}`
     );
 
-    botaoExcluir.addEventListener("click", () => {
+    botaoExcluir.addEventListener("click", (evento) => {
+        evento.stopPropagation();
         fotosPreparadas = fotosPreparadas.filter(
             (foto) => foto !== arquivo
         );
+        chavesFotos.delete(chaveFoto);
         figura.remove();
     });
 
@@ -140,6 +149,28 @@ function formatarTamanho(bytes) {
 const formulario = document.querySelector("#form-semanario");
 const botaoSalvar = document.querySelector("#botao-salvar");
 const mensagemSalvamento = document.querySelector("#mensagem-salvamento");
+
+const botoesAjuda = document.querySelectorAll(".botao-ajuda");
+
+botoesAjuda.forEach((botao) => {
+    botao.addEventListener("click", () => {
+        const idAjuda = botao.getAttribute("aria-controls");
+        const textoAjuda = document.getElementById(idAjuda);
+        const estavaAberto = botao.getAttribute("aria-expanded") === "true";
+
+        botoesAjuda.forEach((outroBotao) => {
+            const outroId = outroBotao.getAttribute("aria-controls");
+            const outroTexto = document.getElementById(outroId);
+            outroBotao.setAttribute("aria-expanded", "false");
+            outroTexto.hidden = true;
+        });
+
+        if (!estavaAberto) {
+            botao.setAttribute("aria-expanded", "true");
+            textoAjuda.hidden = false;
+        }
+    });
+});
 
 
 formulario.addEventListener("submit", async (evento) => {
