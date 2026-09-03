@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semanário Digital</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=3) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=4) }}">
 </head>
 <body>
     <header>
@@ -60,7 +60,47 @@
                 </div>
             </div>
                         <section class="semana" aria-labelledby="titulo-dias">
-                <h3 id="titulo-dias">Registros da semana</h3>
+                <div class="cabecalho-secao">
+    <h3 id="titulo-dias">Registros da semana</h3>
+
+    <details class="ajuda-preenchimento">
+        <summary>Como preencher?</summary>
+
+        <div class="conteudo-ajuda">
+            <dl>
+                <div>
+                    <dt>Proposta</dt>
+                    <dd>O que será realizado com as crianças.</dd>
+                </div>
+
+                <div>
+                    <dt>Intencionalidade</dt>
+                    <dd>A aprendizagem ou experiência que se pretende favorecer.</dd>
+                </div>
+
+                <div>
+                    <dt>Desenvolvimento</dt>
+                    <dd>Como a atividade aconteceu na prática.</dd>
+                </div>
+
+                <div>
+                    <dt>Observação / Replanejamento</dt>
+                    <dd>O que foi observado e o que precisa ser ajustado ou retomado.</dd>
+                </div>
+
+                <div>
+                    <dt>Registro Reflexivo</dt>
+                    <dd>A reflexão sobre a experiência e seus resultados.</dd>
+                </div>
+
+                <div>
+                    <dt>Fotos</dt>
+                    <dd>Novas seleções são acrescentadas às anteriores.</dd>
+                </div>
+            </dl>
+        </div>
+    </details>
+</div>
 
                 <div class="dias-semana">
                     {% for dia in dias %}
@@ -68,40 +108,35 @@
                         <h4>{{ dia }}</h4>
 
                         <div class="campo">
-                            <div class="linha-rotulo"><label for="proposta-{{ loop.index }}">Proposta</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Proposta" aria-controls="ajuda-proposta-{{ loop.index }}" aria-expanded="false">?</button></div>
-                            <span id="ajuda-proposta-{{ loop.index }}" class="texto-ajuda" hidden>Descreva o que será realizado com as crianças.</span>
+                            <label for="proposta-{{ loop.index }}">Proposta</label>
                             <textarea id="proposta-{{ loop.index }}"
                                       name="proposta_{{ loop.index }}"
                                       rows="3"></textarea>
                         </div>
 
                         <div class="campo">
-                            <div class="linha-rotulo"><label for="intencionalidade-{{ loop.index }}">Intencionalidade</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Intencionalidade" aria-controls="ajuda-intencionalidade-{{ loop.index }}" aria-expanded="false">?</button></div>
-                            <span id="ajuda-intencionalidade-{{ loop.index }}" class="texto-ajuda" hidden>Informe qual aprendizagem ou experiência se pretende favorecer.</span>
+                            <label for="intencionalidade-{{ loop.index }}">Intencionalidade</label>
                             <textarea id="intencionalidade-{{ loop.index }}"
                                       name="intencionalidade_{{ loop.index }}"
                                       rows="3"></textarea>
                         </div>
 
                         <div class="campo">
-                            <div class="linha-rotulo"><label for="desenvolvimento-{{ loop.index }}">Desenvolvimento</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Desenvolvimento" aria-controls="ajuda-desenvolvimento-{{ loop.index }}" aria-expanded="false">?</button></div>
-                            <span id="ajuda-desenvolvimento-{{ loop.index }}" class="texto-ajuda" hidden>Registre como a atividade aconteceu na prática.</span>
+                            <label for="desenvolvimento-{{ loop.index }}">Desenvolvimento</label>
                             <textarea id="desenvolvimento-{{ loop.index }}"
                                       name="desenvolvimento_{{ loop.index }}"
                                       rows="3"></textarea>
                         </div>
 
                         <div class="campo">
-                            <div class="linha-rotulo"><label for="observacao-{{ loop.index }}">Observação / Replanejamento</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Observação e Replanejamento" aria-controls="ajuda-observacao-{{ loop.index }}" aria-expanded="false">?</button></div>
-                            <span id="ajuda-observacao-{{ loop.index }}" class="texto-ajuda" hidden>Registre o que foi observado e o que precisa ser ajustado ou retomado.</span>
+                            <label for="observacao-{{ loop.index }}">Observação / Replanejamento</label>
                             <textarea id="observacao-{{ loop.index }}"
                                       name="observacao_{{ loop.index }}"
                                       rows="3"></textarea>
                         </div>
 
                         <div class="campo">
-                            <div class="linha-rotulo"><label for="registro-{{ loop.index }}">Registro Reflexivo</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Registro Reflexivo" aria-controls="ajuda-registro-{{ loop.index }}" aria-expanded="false">?</button></div>
-                            <span id="ajuda-registro-{{ loop.index }}" class="texto-ajuda" hidden>Registre sua reflexão sobre a experiência e seus resultados.</span>
+                            <label for="registro-{{ loop.index }}">Registro Reflexivo</label>
                             <textarea id="registro-{{ loop.index }}"
                                       name="registro_{{ loop.index }}"
                                       rows="3"></textarea>
@@ -118,8 +153,7 @@
                 </p>
 
                 <div class="campo">
-                    <div class="linha-rotulo"><label for="fotos">Selecionar fotos</label><button type="button" class="botao-ajuda" aria-label="Ajuda sobre Selecionar fotos" aria-controls="ajuda-fotos" aria-expanded="false">?</button></div>
-                    <span id="ajuda-fotos" class="texto-ajuda" hidden>Escolha uma ou mais fotos. Novas seleções serão acrescentadas às anteriores.</span>
+                    <label for="fotos">Selecionar fotos</label>
                     <input type="file"
                            id="fotos"
                            name="fotos"
@@ -147,6 +181,6 @@
     </section>
 </main>
 
-    <script src="{{ url_for('static', filename='js/script.js', v=3) }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js', v=4) }}"></script>
 </body>
 </html>

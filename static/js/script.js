@@ -150,28 +150,6 @@ const formulario = document.querySelector("#form-semanario");
 const botaoSalvar = document.querySelector("#botao-salvar");
 const mensagemSalvamento = document.querySelector("#mensagem-salvamento");
 
-const botoesAjuda = document.querySelectorAll(".botao-ajuda");
-
-botoesAjuda.forEach((botao) => {
-    botao.addEventListener("click", () => {
-        const idAjuda = botao.getAttribute("aria-controls");
-        const textoAjuda = document.getElementById(idAjuda);
-        const estavaAberto = botao.getAttribute("aria-expanded") === "true";
-
-        botoesAjuda.forEach((outroBotao) => {
-            const outroId = outroBotao.getAttribute("aria-controls");
-            const outroTexto = document.getElementById(outroId);
-            outroBotao.setAttribute("aria-expanded", "false");
-            outroTexto.hidden = true;
-        });
-
-        if (!estavaAberto) {
-            botao.setAttribute("aria-expanded", "true");
-            textoAjuda.hidden = false;
-        }
-    });
-});
-
 
 formulario.addEventListener("submit", async (evento) => {
     evento.preventDefault();
