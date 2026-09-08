@@ -7,10 +7,26 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=4) }}">
 </head>
 <body>
-    <header>
+    <header class="cabecalho-principal">
+    <div class="marca-cabecalho">
         <h1>Semanário Digital</h1>
         <p>Educação Infantil</p>
-    </header>
+    </div>
+
+    <form
+        action="{{ url_for('logout') }}"
+        method="post"
+        class="form-logout"
+    >
+        <span>
+            Olá, {{ session["usuario_nome"] }}
+        </span>
+
+        <button type="submit">
+            Sair
+        </button>
+    </form>
+</header>
 
    <main>
             <nav class="atalhos-pagina" aria-label="Atalhos">

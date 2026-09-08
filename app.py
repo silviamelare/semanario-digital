@@ -1,3 +1,5 @@
+from functools import wraps
+from os import environ
 from pathlib import Path
 from uuid import uuid4
 
@@ -5,22 +7,112 @@ from flask import (
     Flask,
     abort,
     jsonify,
+    redirect,
     render_template,
     request,
-    send_from_directory
+    send_from_directory,
+    session,
+    url_for,
+
 )
 
-from database import conectar, criar_banco
+from database import (
+    alterar_senha,
+    autenticar_usuario,
+    conectar,
+    criar_banco,
+)
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = environ.get(
+    "SECRET_KEY",
+    "chave-utilizada-somente-no-desenvolvimento",
+)
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 PASTA_UPLOADS = Path(__file__).resolve().parent / "uploads"
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 criar_banco()
+def login_obrigatorio(funcao):
+    @wraps(funcao)
+    def funcao_protegida(*args, **kwargs):
+        if "usuario_id" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify(
+                    {"erro": "Faça login para continuar."}
+                ), 401
 
+            return redirect(url_for("login"))
+
+        return funcao(*args, **kwargs)
+
+    return funcao_protegida
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    erro = None
+
+    if request.method == "POST":
+        rf = request.form.get("rf", "")
+        senha = request.form.get("senha", "")
+        usuario = autenticar_usuario(rf, senha)
+
+        if usuario is None:
+            erro = "RF ou senha inválidos."
+        else:
+            session.clear()
+            session["usuario_id"] = usuario["id"]
+            session["usuario_nome"] = usuario["nome"]
+            session["usuario_perfil"] = usuario["perfil"]
+
+            if usuario["primeiro_acesso"]:
+                return redirect(url_for("trocar_senha"))
+
+            return redirect(url_for("inicio"))
+
+    return render_template("login.html", erro=erro)
+
+
+@app.route("/trocar-senha", methods=["GET", "POST"])
+def trocar_senha():
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    erro = None
+
+    if request.method == "POST":
+        nova_senha = request.form.get("nova_senha", "")
+        confirmar_senha = request.form.get("confirmar_senha", "")
+
+        if nova_senha != confirmar_senha:
+            erro = "As senhas digitadas não são iguais."
+        else:
+            try:
+                senha_alterada = alterar_senha(
+                    session["usuario_id"],
+                    nova_senha,
+                )
+            except ValueError as excecao:
+                erro = str(excecao)
+            else:
+                if not senha_alterada:
+                    session.clear()
+                    return redirect(url_for("login"))
+
+                return redirect(url_for("inicio"))
+
+    return render_template(
+        "trocar_senha.html",
+        erro=erro,
+    )
+@app.post("/logout")
+@login_obrigatorio
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 @app.route("/")
+@login_obrigatorio
 def inicio():
     dias_semana = [
         "Segunda-feira",
@@ -31,6 +123,7 @@ def inicio():
     ]
     return render_template("index.html", dias=dias_semana)
 @app.get("/semanarios")
+@login_obrigatorio
 def listar_semanarios():
     with conectar() as conexao:
         semanarios = conexao.execute(
@@ -54,6 +147,7 @@ def listar_semanarios():
 
 
 @app.get("/semanarios/<int:semanario_id>")
+@login_obrigatorio
 def visualizar_semanario(semanario_id):
     with conectar() as conexao:
         semanario = conexao.execute(
@@ -106,10 +200,12 @@ def visualizar_semanario(semanario_id):
 
 
 @app.get("/uploads/<path:nome_arquivo>")
+@login_obrigatorio
 def mostrar_upload(nome_arquivo):
     return send_from_directory(PASTA_UPLOADS, nome_arquivo)
 
 @app.post("/api/semanarios")
+@login_obrigatorio
 def salvar_semanario():
     dados_identificacao = {
         "professora": request.form.get("professora", "").strip(),

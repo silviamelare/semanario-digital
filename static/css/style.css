@@ -470,3 +470,145 @@ main h2 {
     justify-content: flex-end;
     margin-bottom: 20px;
 }
+
+
+/* Tela de login */
+
+.pagina-login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background-color: #eef3f1;
+}
+
+.cartao-login {
+    width: min(100%, 420px);
+    padding: 0;
+    overflow: hidden;
+    background-color: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+.marca-login {
+    padding: 28px 32px;
+    color: #ffffff;
+    background-color: #2f756a;
+}
+
+.marca-login h1,
+.marca-login p {
+    margin: 0;
+}
+
+.marca-login p {
+    margin-top: 4px;
+}
+
+.cartao-login section {
+    padding: 28px 32px 32px;
+}
+
+.cartao-login h2 {
+    margin-top: 0;
+    color: #24675f;
+}
+
+.form-login {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.form-login button {
+    width: 100%;
+}
+
+.cartao-login .mensagem.erro {
+    padding: 12px;
+    color: #8a1c1c;
+    background-color: #fdecec;
+    border: 1px solid #efb4b4;
+    border-radius: 8px;
+}
+
+
+.controle-senha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.controle-senha input {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    accent-color: #2f756a;
+}
+
+.form-login button[type="submit"] {
+    min-height: 44px;
+    padding: 10px 16px;
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #2f756a;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.form-login button[type="submit"]:hover {
+    background-color: #24675f;
+}
+
+.form-login button[type="submit"]:focus-visible {
+    outline: 3px solid #9bc9c1;
+    outline-offset: 2px;
+}
+/* Usuário conectado e saída */
+.cabecalho-principal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.form-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-logout span {
+    color: #ffffff;
+}
+
+.form-logout button {
+    padding: 8px 16px;
+    color: #2f756a;
+    font-weight: bold;
+    background-color: #ffffff;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.form-logout button:hover {
+    background-color: #eef3f1;
+}
+
+@media (max-width: 600px) {
+    .cabecalho-principal {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .form-logout {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

@@ -19,7 +19,12 @@ def cliente(tmp_path, monkeypatch):
     database.criar_banco()
 
     with modulo_app.app.test_client() as cliente_teste:
-        yield cliente_teste
+        with cliente_teste.session_transaction() as sessao:
+            sessao["usuario_id"] = 1
+            sessao["usuario_nome"] = "Professora Teste"
+            sessao["usuario_perfil"] = "professora"
+
+    yield cliente_teste
 
 
 def dados_validos():
@@ -161,3 +166,27 @@ def test_upload_salvo_pode_ser_acessado(cliente):
 
     assert resposta.status_code == 200
     assert resposta.data == b"imagem-de-teste"
+
+def test_pagina_inicial_exige_login(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao.clear()
+
+    resposta = cliente.get("/")
+
+    assert resposta.status_code == 302
+    assert resposta.headers["Location"].endswith("/login")
+
+
+def test_api_exige_login(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao.clear()
+
+    resposta = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+
+    assert resposta.status_code == 401
+    assert resposta.get_json() == {
+        "erro": "Faça login para continuar."
+    }
