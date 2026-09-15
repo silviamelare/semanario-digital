@@ -181,21 +181,24 @@ def novo_usuario():
             senha_gerada = gerar_senha_provisoria()
 
             try:
-                usuario_id = cadastrar_usuario(
-                    nome,
-                    rf,
-                    senha_gerada,
-                    perfil,
-                )
-
-                if perfil == "professora":
-                    cadastrar_vinculo(
-                        usuario_id,
-                        ano,
-                        turma,
-                        periodo,
-                        ciclo,
+                with conectar() as conexao:
+                    usuario_id = cadastrar_usuario(
+                        nome,
+                        rf,
+                        senha_gerada,
+                        perfil,
+                        conexao=conexao,
                     )
+
+                    if perfil == "professora":
+                        cadastrar_vinculo(
+                            usuario_id,
+                            ano,
+                            turma,
+                            periodo,
+                            ciclo,
+                            conexao=conexao,
+                        )
             except sqlite3.IntegrityError:
                 erro = "Já existe um usuário cadastrado com esse RF."
             except ValueError as excecao:

@@ -89,6 +89,26 @@ def test_senha_exibida_autentica_professora(cliente):
     assert vinculo["periodo"] == "manha"
     assert vinculo["ciclo"] == "bercario"
 
+def test_cadastro_desfaz_usuario_se_vinculo_falhar(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_perfil"] = "administrativo"
+
+    resposta = cliente.post(
+        "/administrativo/usuarios/novo",
+        data={
+            "nome": "Professora Sem Vínculo",
+            "rf": "RF_ROLLBACK_001",
+            "perfil": "professora",
+            "ano": "1999",
+            "turma": "Borboleta",
+            "periodo": "manha",
+            "ciclo": "bercario",
+        },
+    )
+
+    assert resposta.status_code == 200
+    assert database.buscar_usuario_por_rf("RF_ROLLBACK_001") is None
+
 def dados_validos():
     dados = {
         "professora": "Professora Teste",

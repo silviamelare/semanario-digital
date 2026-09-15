@@ -1,6 +1,8 @@
 import sqlite3
+from contextlib import nullcontext
 from pathlib import Path
 from werkzeug.security import check_password_hash, generate_password_hash
+
 
 PASTA_PROJETO = Path(__file__).resolve().parent
 CAMINHO_BANCO = PASTA_PROJETO / "semanario.db"
@@ -85,7 +87,7 @@ def criar_banco():
 PERFIS_VALIDOS = {"professora", "ap_diretora", "administrativo"}
 
 
-def cadastrar_usuario(nome, rf, senha_provisoria, perfil):
+def cadastrar_usuario(nome, rf, senha_provisoria, perfil, conexao=None):
     nome = nome.strip()
     rf = rf.strip()
     perfil = perfil.strip().lower()
@@ -104,7 +106,8 @@ def cadastrar_usuario(nome, rf, senha_provisoria, perfil):
 
     senha_hash = generate_password_hash(senha_provisoria)
 
-    with conectar() as conexao:
+    gerenciador = nullcontext(conexao) if conexao is not None else conectar()
+    with gerenciador as conexao:
         cursor = conexao.execute(
             """
             INSERT INTO usuarios (
@@ -118,7 +121,7 @@ def cadastrar_usuario(nome, rf, senha_provisoria, perfil):
             (nome, rf, senha_hash, perfil),
         )
 
-        return cursor.lastrowid
+    return cursor.lastrowid
 
 
 def buscar_usuario_por_rf(rf):
@@ -170,7 +173,7 @@ def alterar_senha(usuario_id, nova_senha):
 
 
 
-def cadastrar_vinculo(usuario_id, ano, turma, periodo, ciclo):
+def cadastrar_vinculo(usuario_id, ano, turma, periodo, ciclo, conexao=None):
     ano = int(ano)
     turma = turma.strip()
     periodo = periodo.strip()
@@ -188,7 +191,8 @@ def cadastrar_vinculo(usuario_id, ano, turma, periodo, ciclo):
     if not ciclo:
         raise ValueError("O ciclo é obrigatório.")
 
-    with conectar() as conexao:
+    gerenciador = nullcontext(conexao) if conexao is not None else conectar()
+    with gerenciador as conexao:
         usuario = conexao.execute(
             """
             SELECT perfil, ativo
