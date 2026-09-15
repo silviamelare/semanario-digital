@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Cadastro de usuários | Semanário Digital</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+<script
+    src="{{ url_for('static', filename='js/administrativo.js') }}"
+    defer
+></script>
+</head>
+
+<body class="pagina-administrativa">
+    <header class="cabecalho-principal">
+        <div class="marca-cabecalho">
+            <h1>Semanário Digital</h1>
+            <p>Área administrativa</p>
+        </div>
+
+        <form
+            action="{{ url_for('logout') }}"
+            method="post"
+            class="form-logout"
+        >
+            <span>
+                Olá, {{ session["usuario_nome"] }}
+            </span>
+
+            <button type="submit">
+                Sair
+            </button>
+        </form>
+    </header>
+
+    <main class="conteudo-administrativo">
+        <section
+            class="cartao-administrativo"
+            aria-labelledby="titulo-cadastro"
+        >
+            <h2 id="titulo-cadastro">
+                Cadastrar usuário
+            </h2>
+
+            <p>
+                Informe os dados do profissional para criar o acesso.
+            </p>
+
+            {% if erro %}
+                <p class="mensagem erro" role="alert">
+                    {{ erro }}
+                </p>
+            {% endif %}
+
+            {% if senha_provisoria %}
+    <section
+        class="resultado-cadastro"
+        aria-labelledby="titulo-senha-provisoria"
+    >
+        <h3 id="titulo-senha-provisoria">
+            Usuário cadastrado com sucesso
+        </h3>
+
+        <p>
+            Acesso de
+            <strong>{{ usuario_cadastrado }}</strong>:
+        </p>
+
+        <label for="senha-provisoria">
+            Senha provisória
+        </label>
+
+        <div class="linha-senha">
+            <input
+                type="text"
+                id="senha-provisoria"
+                value="{{ senha_provisoria }}"
+                readonly
+            >
+
+            <button type="button" id="copiar-senha">
+                Copiar senha
+            </button>
+        </div>
+
+        <p class="aviso-senha">
+            Anote ou copie esta senha agora. Ela não será
+            exibida novamente.
+        </p>
+    </section>
+{% endif %}
+
+            <form method="post" class="form-administrativo">
+                <div class="grade-formulario">
+    <label>
+        Nome completo
+
+        <input
+            type="text"
+            name="nome"
+            value="{{ request.form.get('nome', '') }}"
+            autocomplete="name"
+            required
+        >
+    </label>
+
+    <label>
+        RF
+
+        <input
+            type="text"
+            name="rf"
+            value="{{ request.form.get('rf', '') }}"
+            autocomplete="off"
+            required
+        >
+    </label>
+
+    <label>
+        Perfil
+
+        <select name="perfil" id="perfil" required>
+            <option value="">Selecione</option>
+
+            <option
+                value="professora"
+                {% if request.form.get('perfil') == 'professora' %}
+                    selected
+                {% endif %}
+            >
+                Professora
+            </option>
+
+            <option
+                value="ap_diretora"
+                {% if request.form.get('perfil') == 'ap_diretora' %}
+                    selected
+                {% endif %}
+            >
+                AP/Diretora
+            </option>
+
+            <option
+                value="administrativo"
+                {% if request.form.get('perfil') == 'administrativo' %}
+                    selected
+                {% endif %}
+            >
+                Administrativo
+            </option>
+        </select>
+    </label>
+</div>
+
+<fieldset
+    id="dados-vinculo"
+    class="dados-vinculo"
+    hidden
+>
+    <legend>Vínculo com a turma</legend>
+
+    <div class="grade-formulario">
+        <label>
+            Ano
+
+            <input
+                type="number"
+                name="ano"
+                min="2000"
+                max="2100"
+                value="{{ request.form.get('ano', '') }}"
+            >
+        </label>
+
+        <label>
+            Turma
+
+            <input
+                type="text"
+                name="turma"
+                value="{{ request.form.get('turma', '') }}"
+            >
+        </label>
+
+        <label>
+            Período
+
+            <select name="periodo">
+                <option value="">Selecione</option>
+                <option value="manha">Manhã</option>
+                <option value="tarde">Tarde</option>
+            </select>
+        </label>
+
+        <label>
+            Ciclo
+
+            <select name="ciclo">
+                <option value="">Selecione</option>
+                <option value="bercario">Berçário</option>
+                <option value="primeiro_inicial">
+                    1º Inicial
+                </option>
+                <option value="primeiro_final">
+                    1º Final
+                </option>
+            </select>
+        </label>
+    </div>
+</fieldset>
+
+<button type="submit">
+    Cadastrar usuário
+</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

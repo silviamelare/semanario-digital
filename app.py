@@ -1,3 +1,6 @@
+import secrets
+import sqlite3
+import string
 from functools import wraps
 from os import environ
 from pathlib import Path
@@ -19,9 +22,12 @@ from flask import (
 from database import (
     alterar_senha,
     autenticar_usuario,
+    cadastrar_usuario,
+    cadastrar_vinculo,
     conectar,
     criar_banco,
 )
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = environ.get(
@@ -34,6 +40,24 @@ PASTA_UPLOADS = Path(__file__).resolve().parent / "uploads"
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 criar_banco()
+def gerar_senha_provisoria(tamanho=12):
+    caracteres = string.ascii_letters + string.digits
+
+    senha = [
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.digits),
+    ]
+
+    senha.extend(
+        secrets.choice(caracteres)
+        for _ in range(tamanho - len(senha))
+    )
+
+    secrets.SystemRandom().shuffle(senha)
+
+    return "".join(senha)
+
 def login_obrigatorio(funcao):
     @wraps(funcao)
     def funcao_protegida(*args, **kwargs):
@@ -44,6 +68,20 @@ def login_obrigatorio(funcao):
                 ), 401
 
             return redirect(url_for("login"))
+
+        return funcao(*args, **kwargs)
+
+    return funcao_protegida
+
+
+def administrativo_obrigatorio(funcao):
+    @wraps(funcao)
+    def funcao_protegida(*args, **kwargs):
+        if "usuario_id" not in session:
+            return redirect(url_for("login"))
+
+        if session.get("usuario_perfil") != "administrativo":
+            abort(403)
 
         return funcao(*args, **kwargs)
 
@@ -111,6 +149,67 @@ def trocar_senha():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+@app.route(
+    "/administrativo/usuarios/novo",
+    methods=["GET", "POST"],
+)
+@administrativo_obrigatorio
+def novo_usuario():
+    erro = None
+    senha_provisoria = None
+    usuario_cadastrado = None
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        rf = request.form.get("rf", "").strip()
+        perfil = request.form.get("perfil", "").strip()
+        ano = request.form.get("ano", "").strip()
+        turma = request.form.get("turma", "").strip()
+        periodo = request.form.get("periodo", "").strip()
+        ciclo = request.form.get("ciclo", "").strip()
+
+        if not nome or not rf or not perfil:
+            erro = "Preencha nome, RF e perfil."
+        elif perfil == "professora" and (
+            not ano or not turma or not periodo or not ciclo
+        ):
+            erro = (
+                "Para professoras, preencha também "
+                "ano, turma, período e ciclo."
+            )
+        else:
+            senha_gerada = gerar_senha_provisoria()
+
+            try:
+                usuario_id = cadastrar_usuario(
+                    nome,
+                    rf,
+                    senha_gerada,
+                    perfil,
+                )
+
+                if perfil == "professora":
+                    cadastrar_vinculo(
+                        usuario_id,
+                        ano,
+                        turma,
+                        periodo,
+                        ciclo,
+                    )
+            except sqlite3.IntegrityError:
+                erro = "Já existe um usuário cadastrado com esse RF."
+            except ValueError as excecao:
+                erro = str(excecao)
+            else:
+                senha_provisoria = senha_gerada
+                usuario_cadastrado = nome
+
+    return render_template(
+        "cadastro_usuario.html",
+        erro=erro,
+        senha_provisoria=senha_provisoria,
+        usuario_cadastrado=usuario_cadastrado,
+    )
 @app.route("/")
 @login_obrigatorio
 def inicio():

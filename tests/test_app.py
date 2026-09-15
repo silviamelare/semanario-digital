@@ -1,4 +1,5 @@
 from io import BytesIO
+import re
 
 import pytest
 
@@ -26,6 +27,67 @@ def cliente(tmp_path, monkeypatch):
 
     yield cliente_teste
 
+def test_professora_nao_acessa_cadastro(cliente):
+    resposta = cliente.get("/administrativo/usuarios/novo")
+
+    assert resposta.status_code == 403
+
+def test_administrativo_acessa_cadastro(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_perfil"] = "administrativo"
+
+    resposta = cliente.get("/administrativo/usuarios/novo")
+
+    assert resposta.status_code == 200
+
+def test_senha_exibida_autentica_professora(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_perfil"] = "administrativo"
+
+    resposta = cliente.post(
+        "/administrativo/usuarios/novo",
+        data={
+            "nome": "Professora Automática",
+            "rf": "RF_AUTOMATICO_001",
+            "perfil": "professora",
+            "ano": "2026",
+            "turma": "Borboleta",
+            "periodo": "manha",
+            "ciclo": "bercario",
+        },
+    )
+
+    assert resposta.status_code == 200
+
+    html = resposta.get_data(as_text=True)
+    senha_na_tela = re.search(
+        r'id="senha-provisoria"\s+value="([^"]+)"',
+        html,
+    )
+
+    assert senha_na_tela is not None
+    usuario = database.autenticar_usuario(
+        "RF_AUTOMATICO_001",
+        senha_na_tela.group(1),
+    )
+    assert usuario is not None
+
+    with database.conectar() as conexao:
+        vinculo = conexao.execute(
+            """
+            SELECT ano, turma, periodo, ciclo
+            FROM vinculos_anuais
+            WHERE usuario_id = ?
+            """,
+            (usuario["id"],),
+        ).fetchone()
+
+    assert vinculo is not None
+    assert vinculo["ano"] == 2026
+    assert vinculo["turma"] == "Borboleta"
+
+    assert vinculo["periodo"] == "manha"
+    assert vinculo["ciclo"] == "bercario"
 
 def dados_validos():
     dados = {
