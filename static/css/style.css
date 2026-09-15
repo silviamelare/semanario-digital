@@ -719,3 +719,66 @@ main h2 {
         width: 100%;
     }
 }
+.cartao-administrativo .mensagem.erro {
+    padding: 12px;
+    color: #a12626;
+    background-color: #fdecec;
+    border: 1px solid #efb4b4;
+    border-radius: 8px;
+}
+.resultado-cadastro {
+    margin: 24px 0;
+    padding: 20px;
+    background-color: #e8f5f1;
+    border: 1px solid #8fc1b8;
+    border-radius: 10px;
+}
+.resultado-cadastro h3 {
+    margin-top: 0;
+    color: #24675f;
+}
+
+.resultado-cadastro .aviso-senha {
+    margin-bottom: 0;
+    color: #4b625e;
+}
+.linha-senha {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.linha-senha input {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    font: inherit;
+    border: 1px solid #9badaa;
+    border-radius: 8px;
+}
+.linha-senha button {
+    min-height: 44px;
+    padding: 10px 16px;
+    color: #ffffff;
+    font: inherit;
+    font-weight: bold;
+    background-color: #2f756a;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.linha-senha button:hover {
+    background-color: #24675f;
+}
+@media (max-width: 600px) {
+    .linha-senha {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .linha-senha button {
+        width: 100%;
+    }
+}

@@ -194,8 +194,8 @@
 
             <select name="periodo">
                 <option value="">Selecione</option>
-                <option value="manha">Manhã</option>
-                <option value="tarde">Tarde</option>
+                <option value="manha" {% if request.form.get('periodo') == 'manha' %}selected{% endif %}>Manhã</option>
+                <option value="tarde" {% if request.form.get('periodo') == 'tarde' %}selected{% endif %}>Tarde</option>
             </select>
         </label>
 
@@ -204,11 +204,13 @@
 
             <select name="ciclo">
                 <option value="">Selecione</option>
-                <option value="bercario">Berçário</option>
-                <option value="primeiro_inicial">
+                <option value="bercario" {% if request.form.get('ciclo') == 'bercario' %}selected{% endif %}>
+                    Berçário
+                </option>
+                <option value="primeiro_inicial" {% if request.form.get('ciclo') == 'primeiro_inicial' %}selected{% endif %}>
                     1º Inicial
                 </option>
-                <option value="primeiro_final">
+                <option value="primeiro_final" {% if request.form.get('ciclo') == 'primeiro_final' %}selected{% endif %}>
                     1º Final
                 </option>
             </select>

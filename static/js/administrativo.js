@@ -46,3 +46,20 @@ if (botaoCopiarSenha && campoSenhaProvisoria) {
         }
     );
 }
+const formularioAdministrativo = document.querySelector(
+    ".form-administrativo"
+);
+
+if (formularioAdministrativo && campoSenhaProvisoria) {
+    formularioAdministrativo
+        .querySelectorAll("input, select")
+        .forEach((campo) => {
+            if (campo.tagName === "SELECT") {
+                campo.selectedIndex = 0;
+            } else {
+                campo.value = "";
+            }
+        });
+
+    campoPerfil.dispatchEvent(new Event("change"));
+}
