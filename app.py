@@ -68,7 +68,16 @@ def login_obrigatorio(funcao):
                 ), 401
 
             return redirect(url_for("login"))
+        if (
+            session.get("troca_senha_obrigatoria")
+            and request.endpoint != "logout"
+        ):
+            if request.path.startswith("/api/"):
+                return jsonify(
+                    {"erro": "Troque sua senha para continuar."}
+                ), 403
 
+            return redirect(url_for("trocar_senha"))
         return funcao(*args, **kwargs)
 
     return funcao_protegida
@@ -79,6 +88,9 @@ def administrativo_obrigatorio(funcao):
     def funcao_protegida(*args, **kwargs):
         if "usuario_id" not in session:
             return redirect(url_for("login"))
+
+        if session.get("troca_senha_obrigatoria"):
+            return redirect(url_for("trocar_senha"))
 
         if session.get("usuario_perfil") != "administrativo":
             abort(403)
@@ -103,6 +115,9 @@ def login():
             session["usuario_id"] = usuario["id"]
             session["usuario_nome"] = usuario["nome"]
             session["usuario_perfil"] = usuario["perfil"]
+            session["troca_senha_obrigatoria"] = bool(
+                usuario["primeiro_acesso"]
+            )
 
             if usuario["primeiro_acesso"]:
                 return redirect(url_for("trocar_senha"))
@@ -137,7 +152,10 @@ def trocar_senha():
                 if not senha_alterada:
                     session.clear()
                     return redirect(url_for("login"))
-
+                session.pop(
+                    "troca_senha_obrigatoria",
+                    None,
+                )
                 return redirect(url_for("inicio"))
 
     return render_template(

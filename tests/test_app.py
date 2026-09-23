@@ -89,6 +89,49 @@ def test_senha_exibida_autentica_professora(cliente):
     assert vinculo["periodo"] == "manha"
     assert vinculo["ciclo"] == "bercario"
 
+def test_primeiro_acesso_bloqueia_outras_paginas(cliente):
+    database.cadastrar_usuario(
+        "Professora Primeiro Acesso",
+        "RF_PRIMEIRO_ACESSO_001",
+        "SenhaProvisoria-1",
+        "professora",
+    )
+
+    resposta_login = cliente.post(
+        "/login",
+        data={
+            "rf": "RF_PRIMEIRO_ACESSO_001",
+            "senha": "SenhaProvisoria-1",
+        },
+    )
+
+    assert resposta_login.status_code == 302
+    assert resposta_login.headers["Location"].endswith(
+        "/trocar-senha"
+    )
+
+    resposta_inicio = cliente.get("/")
+
+    assert resposta_inicio.status_code == 302
+    assert resposta_inicio.headers["Location"].endswith(
+        "/trocar-senha"
+    )
+
+    resposta_troca = cliente.post(
+        "/trocar-senha",
+        data={
+            "nova_senha": "NovaSenha-2",
+            "confirmar_senha": "NovaSenha-2",
+        },
+    )
+
+    assert resposta_troca.status_code == 302
+    assert resposta_troca.headers["Location"].endswith("/")
+
+    resposta_liberada = cliente.get("/")
+
+    assert resposta_liberada.status_code == 200
+
 def test_cadastro_desfaz_usuario_se_vinculo_falhar(cliente):
     with cliente.session_transaction() as sessao:
         sessao["usuario_perfil"] = "administrativo"
