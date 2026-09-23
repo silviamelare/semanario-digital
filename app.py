@@ -327,100 +327,105 @@ def mostrar_upload(nome_arquivo):
 @app.post("/api/semanarios")
 @login_obrigatorio
 def salvar_semanario():
-    dados_identificacao = {
-        "professora": session["usuario_nome"],
-        "turma": request.form.get("turma", "").strip(),
-        "periodo": request.form.get("periodo", "").strip(),
-        "ciclo": request.form.get("ciclo", "").strip(),
-        "inicio_semana": request.form.get("inicio_semana", "").strip()
+        if session.get("usuario_perfil") != "professora":
+            return jsonify(
+            {"erro": "Somente professoras podem criar semanários."}
+        ), 403
+
+        dados_identificacao = {
+            "professora": session["usuario_nome"],
+            "turma": request.form.get("turma", "").strip(),
+            "periodo": request.form.get("periodo", "").strip(),
+            "ciclo": request.form.get("ciclo", "").strip(),
+            "inicio_semana": request.form.get("inicio_semana", "").strip()
     }
 
-    campos_vazios = [
-        campo
-        for campo, valor in dados_identificacao.items()
-        if not valor
-    ]
+        campos_vazios = [
+            campo
+            for campo, valor in dados_identificacao.items()
+            if not valor
+        ]
 
-    if campos_vazios:
-        return jsonify(
-            {"erro": "Preencha todos os dados de identificação."}
-        ), 400
+        if campos_vazios:
+            return jsonify(
+                {"erro": "Preencha todos os dados de identificação."}
+            ), 400
 
-    with conectar() as conexao:
-        cursor = conexao.execute(
-            """
-                        INSERT INTO semanarios (
-                usuario_id,
-                professora,
-                turma,
-                periodo,
-                ciclo,
-                inicio_semana
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                session["usuario_id"],
-                dados_identificacao["professora"],
-                dados_identificacao["turma"],
-                dados_identificacao["periodo"],
-                dados_identificacao["ciclo"],
-                dados_identificacao["inicio_semana"],
-            )
-        )
-
-        semanario_id = cursor.lastrowid
-
-        for dia_numero in range(1, 6):
-            conexao.execute(
+        with conectar() as conexao:
+            cursor = conexao.execute(
                 """
-                INSERT INTO registros_diarios (
-                    semanario_id,
-                    dia_numero,
-                    proposta,
-                    intencionalidade,
-                    desenvolvimento,
-                    observacao,
-                    registro_reflexivo
+                            INSERT INTO semanarios (
+                    usuario_id,
+                    professora,
+                    turma,
+                    periodo,
+                    ciclo,
+                    inicio_semana
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    semanario_id,
-                    dia_numero,
-                    request.form.get(f"proposta_{dia_numero}", ""),
-                    request.form.get(f"intencionalidade_{dia_numero}", ""),
-                    request.form.get(f"desenvolvimento_{dia_numero}", ""),
-                    request.form.get(f"observacao_{dia_numero}", ""),
-                    request.form.get(f"registro_{dia_numero}", "")
+                    session["usuario_id"],
+                    dados_identificacao["professora"],
+                    dados_identificacao["turma"],
+                    dados_identificacao["periodo"],
+                    dados_identificacao["ciclo"],
+                    dados_identificacao["inicio_semana"],
                 )
             )
 
-        for foto in request.files.getlist("fotos"):
-            if not foto or not foto.mimetype.startswith("image/"):
-                continue
+            semanario_id = cursor.lastrowid
 
-            nome_salvo = f"{uuid4().hex}.jpg"
-            caminho_foto = PASTA_UPLOADS / nome_salvo
-            foto.save(caminho_foto)
-
-            conexao.execute(
-                """
-                INSERT INTO fotos (
-                    semanario_id,
-                    nome_arquivo,
-                    caminho
+            for dia_numero in range(1, 6):
+                conexao.execute(
+                    """
+                    INSERT INTO registros_diarios (
+                        semanario_id,
+                        dia_numero,
+                        proposta,
+                        intencionalidade,
+                        desenvolvimento,
+                        observacao,
+                        registro_reflexivo
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        semanario_id,
+                        dia_numero,
+                        request.form.get(f"proposta_{dia_numero}", ""),
+                        request.form.get(f"intencionalidade_{dia_numero}", ""),
+                        request.form.get(f"desenvolvimento_{dia_numero}", ""),
+                        request.form.get(f"observacao_{dia_numero}", ""),
+                        request.form.get(f"registro_{dia_numero}", "")
+                    )
                 )
-                VALUES (?, ?, ?)
-                """,
-                (semanario_id, foto.filename, nome_salvo)
-            )
 
-    return jsonify(
-        {
-            "mensagem": "Semanário salvo com sucesso!",
-            "id": semanario_id
-        }
-    ), 201
+            for foto in request.files.getlist("fotos"):
+                if not foto or not foto.mimetype.startswith("image/"):
+                    continue
+
+                nome_salvo = f"{uuid4().hex}.jpg"
+                caminho_foto = PASTA_UPLOADS / nome_salvo
+                foto.save(caminho_foto)
+
+                conexao.execute(
+                    """
+                    INSERT INTO fotos (
+                        semanario_id,
+                        nome_arquivo,
+                        caminho
+                    )
+                    VALUES (?, ?, ?)
+                    """,
+                    (semanario_id, foto.filename, nome_salvo)
+                )
+
+        return jsonify(
+            {
+                "mensagem": "Semanário salvo com sucesso!",
+                "id": semanario_id
+            }
+        ), 201
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

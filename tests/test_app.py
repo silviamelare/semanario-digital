@@ -197,6 +197,26 @@ def test_lista_vazia_abre(cliente):
         as_text=True
     )
 
+def test_ap_diretora_nao_pode_criar_semanario(cliente):
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_perfil"] = "ap_diretora"
+
+    resposta = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+
+    assert resposta.status_code == 403
+    assert resposta.get_json() == {
+        "erro": "Somente professoras podem criar semanários."
+    }
+
+    with database.conectar() as conexao:
+        total_semanarios = conexao.execute(
+            "SELECT COUNT(*) FROM semanarios"
+        ).fetchone()[0]
+
+    assert total_semanarios == 0
 
 def test_salvar_exige_identificacao_completa(cliente):
     resposta = cliente.post(
