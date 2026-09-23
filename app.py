@@ -328,7 +328,7 @@ def mostrar_upload(nome_arquivo):
 @login_obrigatorio
 def salvar_semanario():
     dados_identificacao = {
-        "professora": request.form.get("professora", "").strip(),
+        "professora": session["usuario_nome"],
         "turma": request.form.get("turma", "").strip(),
         "periodo": request.form.get("periodo", "").strip(),
         "ciclo": request.form.get("ciclo", "").strip(),
@@ -349,16 +349,24 @@ def salvar_semanario():
     with conectar() as conexao:
         cursor = conexao.execute(
             """
-            INSERT INTO semanarios (
+                        INSERT INTO semanarios (
+                usuario_id,
                 professora,
                 turma,
                 periodo,
                 ciclo,
                 inicio_semana
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            tuple(dados_identificacao.values())
+            (
+                session["usuario_id"],
+                dados_identificacao["professora"],
+                dados_identificacao["turma"],
+                dados_identificacao["periodo"],
+                dados_identificacao["ciclo"],
+                dados_identificacao["inicio_semana"],
+            )
         )
 
         semanario_id = cursor.lastrowid

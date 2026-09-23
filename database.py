@@ -19,14 +19,18 @@ def criar_banco():
     with conectar() as conexao:
         conexao.executescript(
             """
-            CREATE TABLE IF NOT EXISTS semanarios (
+           CREATE TABLE IF NOT EXISTS semanarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
                 professora TEXT NOT NULL,
                 turma TEXT NOT NULL,
                 periodo TEXT NOT NULL,
                 ciclo TEXT NOT NULL,
                 inicio_semana TEXT NOT NULL,
-                criado_em TEXT DEFAULT CURRENT_TIMESTAMP
+                criado_em TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (usuario_id)
+                    REFERENCES usuarios(id)
+                    ON DELETE SET NULL
             );
 
             CREATE TABLE IF NOT EXISTS registros_diarios (
@@ -83,6 +87,22 @@ def criar_banco():
             """
         )
 
+        colunas_semanarios = {
+            coluna["name"]
+            for coluna in conexao.execute(
+                "PRAGMA table_info(semanarios)"
+            ).fetchall()
+        }
+
+        if "usuario_id" not in colunas_semanarios:
+            conexao.execute(
+                """
+                ALTER TABLE semanarios
+                ADD COLUMN usuario_id INTEGER
+                    REFERENCES usuarios(id)
+                    ON DELETE SET NULL
+                """
+            )
 
 PERFIS_VALIDOS = {"professora", "ap_diretora", "administrativo"}
 

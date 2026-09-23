@@ -19,9 +19,16 @@ def cliente(tmp_path, monkeypatch):
 
     database.criar_banco()
 
+    usuario_id_teste = database.cadastrar_usuario(
+            "Professora Teste",
+            "RF_FIXTURE_001",
+            "SenhaTeste-1",
+            "professora",
+    )
+
     with modulo_app.app.test_client() as cliente_teste:
         with cliente_teste.session_transaction() as sessao:
-            sessao["usuario_id"] = 1
+            sessao["usuario_id"] = usuario_id_teste
             sessao["usuario_nome"] = "Professora Teste"
             sessao["usuario_perfil"] = "professora"
 
@@ -225,6 +232,18 @@ def test_salva_semanario_com_dias_e_multiplas_fotos(cliente):
         total_semanarios = conexao.execute(
             "SELECT COUNT(*) FROM semanarios"
         ).fetchone()[0]
+        semanario = conexao.execute(
+            """
+            SELECT
+                semanarios.usuario_id,
+                semanarios.professora,
+                usuarios.rf
+            FROM semanarios
+            JOIN usuarios
+                ON usuarios.id = semanarios.usuario_id
+            WHERE semanarios.id = 1
+            """
+        ).fetchone()
         total_registros = conexao.execute(
             "SELECT COUNT(*) FROM registros_diarios WHERE semanario_id = 1"
         ).fetchone()[0]
@@ -234,6 +253,10 @@ def test_salva_semanario_com_dias_e_multiplas_fotos(cliente):
         ).fetchall()
 
     assert total_semanarios == 1
+    assert semanario is not None
+    assert semanario["usuario_id"] is not None
+    assert semanario["professora"] == "Professora Teste"
+    assert semanario["rf"] == "RF_FIXTURE_001"
     assert total_registros == 5
     assert [foto["nome_arquivo"] for foto in fotos] == [
         "foto-1.jpg",
@@ -275,6 +298,7 @@ def test_semanario_inexistente_retorna_404(cliente):
 
 def test_upload_salvo_pode_ser_acessado(cliente):
     dados = dados_validos()
+    dados["professora"] = "Nome enviado indevidamente"
     dados["fotos"] = [(BytesIO(b"imagem-de-teste"), "foto.jpg")]
     cliente.post(
         "/api/semanarios",
