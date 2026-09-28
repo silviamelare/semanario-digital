@@ -25,6 +25,22 @@
     </header>
 
     <main>
+        {% if (
+    session.get("usuario_perfil") == "professora"
+    and semanario["usuario_id"] == session.get("usuario_id")
+) %}
+    <nav class="atalhos-pagina" aria-label="Ações do semanário">
+        <a
+            class="botao-link"
+            href="{{ url_for(
+                'editar_semanario',
+                semanario_id=semanario['id']
+            ) }}"
+        >
+            Editar semanário
+        </a>
+    </nav>
+{% endif %}
         <div class="cabecalho-pagina">
             <div>
                 <h2>{{ semanario["turma"] }}</h2>

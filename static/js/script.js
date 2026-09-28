@@ -149,6 +149,8 @@ function formatarTamanho(bytes) {
 const formulario = document.querySelector("#form-semanario");
 const botaoSalvar = document.querySelector("#botao-salvar");
 const mensagemSalvamento = document.querySelector("#mensagem-salvamento");
+const modoEdicao = formulario.dataset.modo === "edicao";
+const enderecoEnvio = formulario.dataset.url;
 
 
 formulario.addEventListener("submit", async (evento) => {
@@ -158,7 +160,9 @@ formulario.addEventListener("submit", async (evento) => {
     mensagemSalvamento.className = "";
 
     botaoSalvar.disabled = true;
-    botaoSalvar.textContent = "Salvando...";
+    botaoSalvar.textContent = modoEdicao
+    ? "Atualizando..."
+    : "Salvando...";
 
     const dados = new FormData(formulario);
 
@@ -169,7 +173,7 @@ formulario.addEventListener("submit", async (evento) => {
     });
 
     try {
-        const resposta = await fetch("/api/semanarios", {
+        const resposta = await fetch(enderecoEnvio, {
             method: "POST",
             body: dados
         });
@@ -177,7 +181,14 @@ formulario.addEventListener("submit", async (evento) => {
         const resultado = await resposta.json();
 
         if (!resposta.ok) {
-            throw new Error(resultado.erro || "Não foi possível salvar.");
+            throw new Error(
+    resultado.erro
+    || (
+        modoEdicao
+            ? "Não foi possível atualizar."
+            : "Não foi possível salvar."
+    )
+);
         }
 
         mensagemSalvamento.textContent = resultado.mensagem;
@@ -189,6 +200,8 @@ formulario.addEventListener("submit", async (evento) => {
         mensagemSalvamento.className = "mensagem-erro";
     } finally {
         botaoSalvar.disabled = false;
-        botaoSalvar.textContent = "Salvar semanário";
+        botaoSalvar.textContent = modoEdicao
+    ? "Atualizar semanário"
+    : "Salvar semanário";
     }
 });

@@ -318,6 +318,65 @@ def visualizar_semanario(semanario_id):
         dias=dias_semana
     )
 
+@app.get("/semanarios/<int:semanario_id>/editar")
+@login_obrigatorio
+def editar_semanario(semanario_id):
+    if session.get("usuario_perfil") != "professora":
+        abort(403)
+
+    with conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT *
+            FROM semanarios
+            WHERE id = ?
+              AND usuario_id = ?
+            """,
+            (
+                semanario_id,
+                session["usuario_id"],
+            ),
+        ).fetchone()
+
+        if semanario is None:
+            abort(404)
+
+        registros = conexao.execute(
+            """
+            SELECT *
+            FROM registros_diarios
+            WHERE semanario_id = ?
+            ORDER BY dia_numero
+            """,
+            (semanario_id,),
+        ).fetchall()
+
+        fotos = conexao.execute(
+            """
+            SELECT *
+            FROM fotos
+            WHERE semanario_id = ?
+            ORDER BY id
+            """,
+            (semanario_id,),
+        ).fetchall()
+
+    dias_semana = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+    ]
+
+    return render_template(
+        "index.html",
+        dias=dias_semana,
+        semanario=semanario,
+        registros=registros,
+        fotos=fotos,
+        modo_edicao=True,
+    )
 
 @app.get("/uploads/<path:nome_arquivo>")
 @login_obrigatorio
@@ -427,5 +486,132 @@ def salvar_semanario():
                 "id": semanario_id
             }
         ), 201
+@app.post("/api/semanarios/<int:semanario_id>")
+@login_obrigatorio
+def atualizar_semanario(semanario_id):
+    if session.get("usuario_perfil") != "professora":
+        return jsonify(
+            {"erro": "Somente professoras podem editar semanários."}
+        ), 403
+
+    dados_identificacao = {
+        "professora": session["usuario_nome"],
+        "turma": request.form.get("turma", "").strip(),
+        "periodo": request.form.get("periodo", "").strip(),
+        "ciclo": request.form.get("ciclo", "").strip(),
+        "inicio_semana": request.form.get(
+            "inicio_semana",
+            "",
+        ).strip(),
+    }
+
+    campos_vazios = [
+        campo
+        for campo, valor in dados_identificacao.items()
+        if not valor
+    ]
+
+    if campos_vazios:
+        return jsonify(
+            {"erro": "Preencha todos os dados de identificação."}
+        ), 400
+
+    with conectar() as conexao:
+        cursor = conexao.execute(
+            """
+            UPDATE semanarios
+            SET professora = ?,
+                turma = ?,
+                periodo = ?,
+                ciclo = ?,
+                inicio_semana = ?
+            WHERE id = ?
+              AND usuario_id = ?
+            """,
+            (
+                dados_identificacao["professora"],
+                dados_identificacao["turma"],
+                dados_identificacao["periodo"],
+                dados_identificacao["ciclo"],
+                dados_identificacao["inicio_semana"],
+                semanario_id,
+                session["usuario_id"],
+            ),
+        )
+
+        if cursor.rowcount != 1:
+            return jsonify(
+                {"erro": "Semanário não encontrado."}
+            ), 404
+
+        for dia_numero in range(1, 6):
+            conexao.execute(
+                """
+                UPDATE registros_diarios
+                SET proposta = ?,
+                    intencionalidade = ?,
+                    desenvolvimento = ?,
+                    observacao = ?,
+                    registro_reflexivo = ?
+                WHERE semanario_id = ?
+                  AND dia_numero = ?
+                """,
+                (
+                    request.form.get(
+                        f"proposta_{dia_numero}",
+                        "",
+                    ),
+                    request.form.get(
+                        f"intencionalidade_{dia_numero}",
+                        "",
+                    ),
+                    request.form.get(
+                        f"desenvolvimento_{dia_numero}",
+                        "",
+                    ),
+                    request.form.get(
+                        f"observacao_{dia_numero}",
+                        "",
+                    ),
+                    request.form.get(
+                        f"registro_{dia_numero}",
+                        "",
+                    ),
+                    semanario_id,
+                    dia_numero,
+                ),
+            )
+
+        for foto in request.files.getlist("fotos"):
+            if not foto or not foto.mimetype.startswith("image/"):
+                continue
+
+            nome_salvo = f"{uuid4().hex}.jpg"
+            caminho_foto = PASTA_UPLOADS / nome_salvo
+            foto.save(caminho_foto)
+
+            conexao.execute(
+                """
+                INSERT INTO fotos (
+                    semanario_id,
+                    nome_arquivo,
+                    caminho
+                )
+                VALUES (?, ?, ?)
+                """,
+                (
+                    semanario_id,
+                    foto.filename,
+                    nome_salvo,
+                ),
+            )
+
+    return jsonify(
+        {
+            "mensagem": "Semanário atualizado com sucesso!",
+            "id": semanario_id,
+        }
+    ), 200
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

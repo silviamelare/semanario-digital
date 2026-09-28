@@ -359,3 +359,60 @@ def test_api_exige_login(cliente):
     assert resposta.get_json() == {
         "erro": "Faça login para continuar."
     }
+
+def test_professora_edita_proprio_semanario(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+
+    assert resposta_criacao.status_code == 201
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    resposta_tela = cliente.get(
+        f"/semanarios/{semanario_id}/editar"
+    )
+
+    assert resposta_tela.status_code == 200
+
+    html = resposta_tela.get_data(as_text=True)
+    assert "Editar planejamento semanal" in html
+    assert "Atualizar semanário" in html
+
+    dados_atualizados = dados_validos()
+    dados_atualizados["turma"] = "Turma Atualizada"
+    dados_atualizados["proposta_1"] = "Proposta atualizada"
+
+    resposta_atualizacao = cliente.post(
+        f"/api/semanarios/{semanario_id}",
+        data=dados_atualizados,
+    )
+
+    assert resposta_atualizacao.status_code == 200
+    assert resposta_atualizacao.get_json() == {
+        "mensagem": "Semanário atualizado com sucesso!",
+        "id": semanario_id,
+    }
+
+    with database.conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT turma
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+        primeiro_dia = conexao.execute(
+            """
+            SELECT proposta
+            FROM registros_diarios
+            WHERE semanario_id = ?
+              AND dia_numero = 1
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert semanario["turma"] == "Turma Atualizada"
+    assert primeiro_dia["proposta"] == "Proposta atualizada"

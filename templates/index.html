@@ -36,43 +36,110 @@
             </a>
         </nav>
     <section aria-labelledby="titulo-planejamento">
-        <h2 id="titulo-planejamento">Planejamento semanal</h2>
+        <h2 id="titulo-planejamento">
+    {% if modo_edicao %}
+        Editar planejamento semanal
+    {% else %}
+        Planejamento semanal
+    {% endif %}
+</h2>
         <p>Preencha e acompanhe os registros da turma durante toda a semana.</p>
 
-        <form id="form-semanario" enctype="multipart/form-data">
+        <form
+    id="form-semanario"
+    enctype="multipart/form-data"
+    data-url="{% if modo_edicao %}{{ url_for('atualizar_semanario', semanario_id=semanario['id']) }}{% else %}{{ url_for('salvar_semanario') }}{% endif %}"
+    data-modo="{% if modo_edicao %}edicao{% else %}criacao{% endif %}"
+>
             <div class="grade-identificacao">
                 <div class="campo">
                     <label for="professora">Professora</label>
-                    <input type="text" id="professora" name="professora">
+                    <input
+    type="text"
+    id="professora"
+    name="professora"
+    value="{{ session['usuario_nome'] }}"
+    readonly
+>
                 </div>
 
                 <div class="campo">
                     <label for="turma">Turma</label>
-                    <input type="text" id="turma" name="turma">
+                    <input
+    type="text"
+    id="turma"
+    name="turma"
+    value="{{ semanario['turma'] if modo_edicao else '' }}"
+>
                 </div>
 
                 <div class="campo">
                     <label for="periodo">Período</label>
                     <select id="periodo" name="periodo">
-                        <option value="">Selecione</option>
-                        <option value="manha">Manhã</option>
-                        <option value="tarde">Tarde</option>
-                    </select>
+    <option value="">Selecione</option>
+
+    <option
+        value="manha"
+        {% if modo_edicao and semanario["periodo"] == "manha" %}
+            selected
+        {% endif %}
+    >
+        Manhã
+    </option>
+
+    <option
+        value="tarde"
+        {% if modo_edicao and semanario["periodo"] == "tarde" %}
+            selected
+        {% endif %}
+    >
+        Tarde
+    </option>
+</select>
                 </div>
 
                 <div class="campo">
                     <label for="ciclo">Ciclo</label>
                     <select id="ciclo" name="ciclo">
-                        <option value="">Selecione</option>
-                        <option value="bercario">Berçário</option>
-                        <option value="inicial">1º Inicial</option>
-                        <option value="final">1º Final</option>
-                    </select>
+    <option value="">Selecione</option>
+
+    <option
+        value="bercario"
+        {% if modo_edicao and semanario["ciclo"] == "bercario" %}
+            selected
+        {% endif %}
+    >
+        Berçário
+    </option>
+
+    <option
+        value="inicial"
+        {% if modo_edicao and semanario["ciclo"] == "inicial" %}
+            selected
+        {% endif %}
+    >
+        1º Inicial
+    </option>
+
+    <option
+        value="final"
+        {% if modo_edicao and semanario["ciclo"] == "final" %}
+            selected
+        {% endif %}
+    >
+        1º Final
+    </option>
+</select>
                 </div>
 
                 <div class="campo">
                     <label for="inicio-semana">Início da semana</label>
-                    <input type="date" id="inicio-semana" name="inicio_semana">
+                    <input
+    type="date"
+    id="inicio-semana"
+    name="inicio_semana"
+    value="{{ semanario['inicio_semana'] if modo_edicao else '' }}"
+>
                 </div>
             </div>
                         <section class="semana" aria-labelledby="titulo-dias">
@@ -125,37 +192,48 @@
 
                         <div class="campo">
                             <label for="proposta-{{ loop.index }}">Proposta</label>
-                            <textarea id="proposta-{{ loop.index }}"
-                                      name="proposta_{{ loop.index }}"
-                                      rows="3"></textarea>
+                            <textarea
+    id="proposta-{{ loop.index }}"
+    name="proposta_{{ loop.index }}"
+    rows="3"
+>{{ registros[loop.index0]["proposta"] if modo_edicao else "" }}</textarea>
+
                         </div>
 
                         <div class="campo">
                             <label for="intencionalidade-{{ loop.index }}">Intencionalidade</label>
-                            <textarea id="intencionalidade-{{ loop.index }}"
-                                      name="intencionalidade_{{ loop.index }}"
-                                      rows="3"></textarea>
+                            <textarea
+    id="intencionalidade-{{ loop.index }}"
+    name="intencionalidade_{{ loop.index }}"
+    rows="3"
+>{{ registros[loop.index0]["intencionalidade"] if modo_edicao else "" }}</textarea>
+
                         </div>
 
                         <div class="campo">
                             <label for="desenvolvimento-{{ loop.index }}">Desenvolvimento</label>
-                            <textarea id="desenvolvimento-{{ loop.index }}"
-                                      name="desenvolvimento_{{ loop.index }}"
-                                      rows="3"></textarea>
+                            <textarea
+    id="desenvolvimento-{{ loop.index }}"
+    name="desenvolvimento_{{ loop.index }}"
+    rows="3"
+>{{ registros[loop.index0]["desenvolvimento"] if modo_edicao else "" }}</textarea>
                         </div>
 
                         <div class="campo">
                             <label for="observacao-{{ loop.index }}">Observação / Replanejamento</label>
-                            <textarea id="observacao-{{ loop.index }}"
-                                      name="observacao_{{ loop.index }}"
-                                      rows="3"></textarea>
+                            <textarea
+    id="observacao-{{ loop.index }}"
+    name="observacao_{{ loop.index }}"
+    rows="3"
+>{{ registros[loop.index0]["observacao"] if modo_edicao else "" }}</textarea>
                         </div>
 
                         <div class="campo">
-                            <label for="registro-{{ loop.index }}">Registro Reflexivo</label>
-                            <textarea id="registro-{{ loop.index }}"
-                                      name="registro_{{ loop.index }}"
-                                      rows="3"></textarea>
+                            <textarea
+    id="registro-{{ loop.index }}"
+    name="registro_{{ loop.index }}"
+    rows="3"
+>{{ registros[loop.index0]["registro_reflexivo"] if modo_edicao else "" }}</textarea>
                         </div>
                     </article>
                     {% endfor %}
@@ -185,8 +263,12 @@
             </section>
                         <div class="acoes-formulario">
                 <button type="submit" id="botao-salvar">
-                    Salvar semanário
-                </button>
+    {% if modo_edicao %}
+        Atualizar semanário
+    {% else %}
+        Salvar semanário
+    {% endif %}
+</button>
 
                 <p id="mensagem-salvamento"
                    role="status"
