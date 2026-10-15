@@ -257,11 +257,15 @@ formulario.addEventListener("submit", async (evento) => {
 
         mensagemSalvamento.textContent = resultado.mensagem;
         mensagemSalvamento.className = "mensagem-sucesso";
+        mensagemSalvamento.setAttribute("role", "status");
 
         formulario.dataset.semanarioId = resultado.id;
     } catch (erro) {
         mensagemSalvamento.textContent = erro.message;
         mensagemSalvamento.className = "mensagem-erro";
+        mensagemSalvamento.setAttribute("role", "alert");
+        mensagemSalvamento.focus();
+
     } finally {
         botaoSalvar.disabled = false;
         botaoSalvar.textContent = modoEdicao

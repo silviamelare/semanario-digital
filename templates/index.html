@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semanário Digital</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=4) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=5) }}">
 </head>
 <body>
+    <a class="pular-conteudo" href="#conteudo-principal">
+    Pular para o conteúdo principal
+    </a>
+
     <header class="cabecalho-principal">
     <div class="marca-cabecalho">
         <h1>Semanário Digital</h1>
@@ -28,7 +32,7 @@
     </form>
 </header>
 
-   <main>
+   <main id="conteudo-principal" tabindex="-1">
             <nav class="atalhos-pagina" aria-label="Atalhos">
             <a class="botao-link"
                href="{{ url_for('listar_semanarios') }}">
@@ -60,22 +64,24 @@
     name="professora"
     value="{{ session['usuario_nome'] }}"
     readonly
+    required
 >
                 </div>
 
                 <div class="campo">
-                    <label for="turma">Turma</label>
+                    <label for="turma">Turma (obrigatório)</label>
                     <input
     type="text"
     id="turma"
     name="turma"
+    required
     value="{{ semanario['turma'] if modo_edicao else '' }}"
 >
                 </div>
 
                 <div class="campo">
-                    <label for="periodo">Período</label>
-                    <select id="periodo" name="periodo">
+                    <label for="periodo">Período (obrigatório)</label>
+                    <select id="periodo" name="periodo" required>
     <option value="">Selecione</option>
 
     <option
@@ -99,8 +105,8 @@
                 </div>
 
                 <div class="campo">
-                    <label for="ciclo">Ciclo</label>
-                    <select id="ciclo" name="ciclo">
+                    <label for="ciclo">Ciclo (obrigatório)</label>
+                    <select id="ciclo" name="ciclo" required>
     <option value="">Selecione</option>
 
     <option
@@ -133,11 +139,12 @@
                 </div>
 
                 <div class="campo">
-                    <label for="inicio-semana">Início da semana</label>
+                    <label for="inicio-semana">Início da semana (obrigatório)</label>
                     <input
     type="date"
     id="inicio-semana"
     name="inicio_semana"
+    required
     value="{{ semanario['inicio_semana'] if modo_edicao else '' }}"
 >
                 </div>
@@ -301,7 +308,8 @@
 
                 <p id="mensagem-salvamento"
                    role="status"
-                   aria-live="polite">
+                   aria-live="polite"
+                   tabindex="-1">
                 </p>
             </div>
         </form>
@@ -310,4 +318,5 @@
 
     <script src="{{ url_for('static', filename='js/script.js', v=5) }}"></script>
 </body>
+
 </html>
