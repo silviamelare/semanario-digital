@@ -416,3 +416,172 @@ def test_professora_edita_proprio_semanario(cliente):
 
     assert semanario["turma"] == "Turma Atualizada"
     assert primeiro_dia["proposta"] == "Proposta atualizada"
+
+
+def test_professora_nao_edita_semanario_de_outra(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+
+    assert resposta_criacao.status_code == 201
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    outra_professora_id = database.cadastrar_usuario(
+        "Outra Professora",
+        "RF_OUTRA_001",
+        "SenhaTeste-2",
+        "professora",
+    )
+
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_id"] = outra_professora_id
+        sessao["usuario_nome"] = "Outra Professora"
+        sessao["usuario_perfil"] = "professora"
+
+    resposta_tela = cliente.get(
+        f"/semanarios/{semanario_id}/editar"
+    )
+
+    assert resposta_tela.status_code == 404
+
+    dados_alterados = dados_validos()
+    dados_alterados["turma"] = "Alteração Indevida"
+
+    resposta_atualizacao = cliente.post(
+        f"/api/semanarios/{semanario_id}",
+        data=dados_alterados,
+    )
+
+    assert resposta_atualizacao.status_code == 404
+
+    with database.conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT turma
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert semanario["turma"] != "Alteração Indevida"
+
+def test_professora_exclui_foto_do_proprio_semanario(cliente):
+    dados = dados_validos()
+    dados["fotos"] = [
+        (
+            BytesIO(b"conteudo-da-foto"),
+            "foto-para-excluir.jpg",
+        ),
+    ]
+
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados,
+        content_type="multipart/form-data",
+    )
+
+    assert resposta_criacao.status_code == 201
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    with database.conectar() as conexao:
+        foto = conexao.execute(
+            """
+            SELECT id, caminho
+            FROM fotos
+            WHERE semanario_id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert foto is not None
+
+    caminho_foto = modulo_app.PASTA_UPLOADS / foto["caminho"]
+    assert caminho_foto.exists()
+
+    resposta_exclusao = cliente.delete(
+        f"/api/fotos/{foto['id']}"
+    )
+
+    assert resposta_exclusao.status_code == 200
+    assert resposta_exclusao.get_json() == {
+        "mensagem": "Foto excluída com sucesso!"
+    }
+
+    with database.conectar() as conexao:
+        foto_apos_exclusao = conexao.execute(
+            """
+            SELECT id
+            FROM fotos
+            WHERE id = ?
+            """,
+            (foto["id"],),
+        ).fetchone()
+
+    assert foto_apos_exclusao is None
+    assert not caminho_foto.exists()
+
+def test_professora_nao_exclui_foto_de_outra(cliente):
+    dados = dados_validos()
+    dados["fotos"] = [
+        (
+            BytesIO(b"foto-da-primeira-professora"),
+            "foto-protegida.jpg",
+        ),
+    ]
+
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados,
+        content_type="multipart/form-data",
+    )
+
+    assert resposta_criacao.status_code == 201
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    with database.conectar() as conexao:
+        foto = conexao.execute(
+            """
+            SELECT id, caminho
+            FROM fotos
+            WHERE semanario_id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert foto is not None
+
+    caminho_foto = modulo_app.PASTA_UPLOADS / foto["caminho"]
+    assert caminho_foto.exists()
+
+    outra_professora_id = database.cadastrar_usuario(
+        "Professora Sem Permissão",
+        "RF_SEM_PERMISSAO_001",
+        "SenhaTeste-3",
+        "professora",
+    )
+
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_id"] = outra_professora_id
+        sessao["usuario_nome"] = "Professora Sem Permissão"
+        sessao["usuario_perfil"] = "professora"
+
+    resposta_exclusao = cliente.delete(
+        f"/api/fotos/{foto['id']}"
+    )
+
+    assert resposta_exclusao.status_code == 404
+
+    with database.conectar() as conexao:
+        foto_apos_tentativa = conexao.execute(
+            """
+            SELECT id
+            FROM fotos
+            WHERE id = ?
+            """,
+            (foto["id"],),
+        ).fetchone()
+
+    assert foto_apos_tentativa is not None
+    assert caminho_foto.exists()

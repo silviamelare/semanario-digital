@@ -257,9 +257,38 @@
                 </div>
 
                 <div id="pre-visualizacao"
-                     class="grade-fotos"
-                     aria-live="polite">
-                </div>
+     class="grade-fotos"
+     aria-live="polite">
+    {% if modo_edicao %}
+        {% for foto in fotos %}
+            <figure
+                class="foto-selecionada foto-existente"
+                data-foto-id="{{ foto['id'] }}"
+            >
+                <img
+                    src="{{ url_for(
+                        'mostrar_upload',
+                        nome_arquivo=foto['caminho']
+                    ) }}"
+                    alt="Foto já salva: {{ foto['nome_arquivo'] }}"
+                >
+
+                <figcaption>
+                    {{ foto["nome_arquivo"] }}
+                </figcaption>
+
+                <button
+                    type="button"
+                    class="excluir-foto excluir-foto-existente"
+                    data-foto-id="{{ foto['id'] }}"
+                    aria-label="Excluir a foto {{ foto['nome_arquivo'] }}"
+                >
+                    ×
+                </button>
+            </figure>
+        {% endfor %}
+    {% endif %}
+</div>
             </section>
                         <div class="acoes-formulario">
                 <button type="submit" id="botao-salvar">
@@ -279,6 +308,6 @@
     </section>
 </main>
 
-    <script src="{{ url_for('static', filename='js/script.js', v=4) }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js', v=5) }}"></script>
 </body>
 </html>

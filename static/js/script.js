@@ -33,6 +33,70 @@ if (campoFotos && gradeFotos) {
     });
 }
 
+const fotosExistentes = document.querySelectorAll(".foto-existente");
+
+fotosExistentes.forEach((figura) => {
+    const botaoExcluir = figura.querySelector(
+        ".excluir-foto-existente"
+    );
+
+    figura.addEventListener("click", () => {
+        const outrasFotos = gradeFotos.querySelectorAll(
+            ".foto-selecionada"
+        );
+
+        outrasFotos.forEach((outraFoto) => {
+            if (outraFoto !== figura) {
+                outraFoto.classList.remove("mostrar-acoes");
+            }
+        });
+
+        figura.classList.toggle("mostrar-acoes");
+    });
+
+    if (!botaoExcluir) {
+        return;
+    }
+
+    botaoExcluir.addEventListener("click", async (evento) => {
+        evento.stopPropagation();
+
+        const confirmouExclusao = window.confirm(
+            "Deseja excluir esta foto?"
+        );
+
+        if (!confirmouExclusao) {
+            return;
+        }
+
+        const fotoId = botaoExcluir.dataset.fotoId;
+        botaoExcluir.disabled = true;
+
+        try {
+            const resposta = await fetch(
+                `/api/fotos/${fotoId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const resultado = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    resultado.erro
+                    || "Não foi possível excluir a foto."
+                );
+            }
+
+            figura.remove();
+        } catch (erro) {
+            window.alert(erro.message);
+            botaoExcluir.disabled = false;
+        }
+    });
+});
+
 function comprimirImagem(arquivo) {
     return new Promise((resolve, reject) => {
         const imagem = new Image();

@@ -613,5 +613,55 @@ def atualizar_semanario(semanario_id):
         }
     ), 200
 
+@app.delete("/api/fotos/<int:foto_id>")
+@login_obrigatorio
+def excluir_foto(foto_id):
+    if session.get("usuario_perfil") != "professora":
+        return jsonify(
+            {"erro": "Somente professoras podem excluir fotos."}
+        ), 403
+
+    with conectar() as conexao:
+        foto = conexao.execute(
+            """
+            SELECT fotos.caminho
+            FROM fotos
+            INNER JOIN semanarios
+                ON semanarios.id = fotos.semanario_id
+            WHERE fotos.id = ?
+              AND semanarios.usuario_id = ?
+            """,
+            (
+                foto_id,
+                session["usuario_id"],
+            ),
+        ).fetchone()
+
+        if foto is None:
+            return jsonify(
+                {"erro": "Foto não encontrada."}
+            ), 404
+
+        caminho_foto = PASTA_UPLOADS / foto["caminho"]
+
+        try:
+            caminho_foto.unlink(missing_ok=True)
+        except OSError:
+            return jsonify(
+                {"erro": "Não foi possível excluir a foto."}
+            ), 500
+
+        conexao.execute(
+            """
+            DELETE FROM fotos
+            WHERE id = ?
+            """,
+            (foto_id,),
+        )
+
+    return jsonify(
+        {"mensagem": "Foto excluída com sucesso!"}
+    ), 200
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
