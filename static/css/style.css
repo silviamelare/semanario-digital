@@ -803,3 +803,8 @@ body :focus-visible {
     outline: 3px solid #005fcc !important;
     outline-offset: 3px;
 }
+
+.grade-identificacao .campo label {
+    display: block;
+    min-height: 2.5em;
+}
