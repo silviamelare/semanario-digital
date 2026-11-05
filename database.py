@@ -104,6 +104,14 @@ def criar_banco():
                 """
             )
 
+        if "atualizado_em" not in colunas_semanarios:
+            conexao.execute(
+                """
+                ALTER TABLE semanarios
+                ADD COLUMN atualizado_em TEXT
+                """
+            )
+
 PERFIS_VALIDOS = {"professora", "ap_diretora", "administrativo"}
 
 

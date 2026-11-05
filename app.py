@@ -1,10 +1,12 @@
 import secrets
 import sqlite3
 import string
+from datetime import date, datetime, timezone
 from functools import wraps
 from os import environ
 from pathlib import Path
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -40,6 +42,21 @@ PASTA_UPLOADS = Path(__file__).resolve().parent / "uploads"
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 criar_banco()
+@app.template_filter("data_hora_brasilia")
+def formatar_data_hora_brasilia(valor):
+    if not valor:
+        return ""
+
+    data_hora_utc = datetime.strptime(
+        valor,
+        "%Y-%m-%d %H:%M:%S",
+    ).replace(tzinfo=timezone.utc)
+
+    data_hora_local = data_hora_utc.astimezone(
+        ZoneInfo("America/Sao_Paulo")
+    )
+
+    return data_hora_local.strftime("%d/%m/%Y às %H:%M")
 def gerar_senha_provisoria(tamanho=12):
     caracteres = string.ascii_letters + string.digits
 
@@ -245,39 +262,98 @@ def inicio():
 @app.get("/semanarios")
 @login_obrigatorio
 def listar_semanarios():
+    data_busca = request.args.get("data", "").strip()
+
+    if data_busca:
+        try:
+            date.fromisoformat(data_busca)
+        except ValueError:
+            abort(400)
+
+    condicoes = []
+    parametros = []
+
+    if session.get("usuario_perfil") == "professora":
+        condicoes.append("usuario_id = ?")
+        parametros.append(session["usuario_id"])
+
+    if data_busca:
+        condicoes.append("inicio_semana = ?")
+        parametros.append(data_busca)
+
+    filtro_sql = ""
+    if condicoes:
+        filtro_sql = "WHERE " + " AND ".join(condicoes)
+
     with conectar() as conexao:
         semanarios = conexao.execute(
-            """
+            f"""
             SELECT
                 id,
+                usuario_id,
                 professora,
                 turma,
                 periodo,
                 ciclo,
-                inicio_semana
+                inicio_semana,
+                criado_em,
+                atualizado_em
             FROM semanarios
+            {filtro_sql}
             ORDER BY inicio_semana DESC, id DESC
-            """
+            """,
+            parametros,
         ).fetchall()
 
     return render_template(
         "lista.html",
-        semanarios=semanarios
+        semanarios=semanarios,
+        data_busca=data_busca,
     )
 
 
 @app.get("/semanarios/<int:semanario_id>")
 @login_obrigatorio
 def visualizar_semanario(semanario_id):
+    condicao_proprietaria = ""
+    parametros = [semanario_id]
+
+    if session.get("usuario_perfil") == "professora":
+        condicao_proprietaria = "AND usuario_id = ?"
+        parametros.append(session["usuario_id"])
     with conectar() as conexao:
         semanario = conexao.execute(
-            """
+            f"""
             SELECT *
             FROM semanarios
             WHERE id = ?
+              {condicao_proprietaria}
             """,
-            (semanario_id,)
+            parametros,
         ).fetchone()
+
+        if semanario is None:
+            abort(404)
+
+        registros = conexao.execute(
+            """
+            SELECT *
+            FROM registros_diarios
+            WHERE semanario_id = ?
+            ORDER BY dia_numero
+            """,
+            (semanario_id,),
+        ).fetchall()
+
+        fotos = conexao.execute(
+            """
+            SELECT *
+            FROM fotos
+            WHERE semanario_id = ?
+            ORDER BY id
+            """,
+            (semanario_id,),
+        ).fetchall()
 
         if semanario is None:
             abort(404)
@@ -316,6 +392,52 @@ def visualizar_semanario(semanario_id):
         registros=registros,
         fotos=fotos,
         dias=dias_semana
+    )
+
+@app.post("/semanarios/<int:semanario_id>/excluir")
+@login_obrigatorio
+def excluir_semanario(semanario_id):
+    if session.get("usuario_perfil") != "professora":
+        abort(403)
+
+    with conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT id
+            FROM semanarios
+            WHERE id = ?
+              AND usuario_id = ?
+            """,
+            (semanario_id, session["usuario_id"]),
+        ).fetchone()
+
+        if semanario is None:
+            abort(404)
+
+        fotos = conexao.execute(
+            """
+            SELECT caminho
+            FROM fotos
+            WHERE semanario_id = ?
+            """,
+            (semanario_id,),
+        ).fetchall()
+
+        for foto in fotos:
+            try:
+                (PASTA_UPLOADS / foto["caminho"]).unlink(
+                    missing_ok=True
+                )
+            except OSError:
+                abort(500)
+
+        conexao.execute(
+            "DELETE FROM semanarios WHERE id = ?",
+            (semanario_id,),
+        )
+
+    return redirect(
+        url_for("listar_semanarios", excluido=1)
     )
 
 @app.get("/semanarios/<int:semanario_id>/editar")
@@ -524,7 +646,8 @@ def atualizar_semanario(semanario_id):
                 turma = ?,
                 periodo = ?,
                 ciclo = ?,
-                inicio_semana = ?
+                inicio_semana = ?,
+                atualizado_em = CURRENT_TIMESTAMP
             WHERE id = ?
               AND usuario_id = ?
             """,

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semanário de {{ semanario["turma"] }}</title>
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+          href="{{ url_for('static', filename='css/style.css', v=8) }}">
 </head>
 <body>
     {% set periodos = {
@@ -25,22 +25,53 @@
     </header>
 
     <main>
-        {% if (
-    session.get("usuario_perfil") == "professora"
-    and semanario["usuario_id"] == session.get("usuario_id")
-) %}
-    <nav class="atalhos-pagina" aria-label="Ações do semanário">
-        <a
-            class="botao-link"
-            href="{{ url_for(
-                'editar_semanario',
-                semanario_id=semanario['id']
-            ) }}"
+                <nav
+            class="atalhos-pagina"
+            aria-label="Ações do semanário"
         >
-            Editar semanário
-        </a>
-    </nav>
-{% endif %}
+            {% if (
+                session.get("usuario_perfil") == "professora"
+                and semanario["usuario_id"] == session.get("usuario_id")
+            ) %}
+            <a
+                class="botao-link"
+                href="{{ url_for(
+                    'editar_semanario',
+                    semanario_id=semanario['id']
+                ) }}"
+            >
+                Editar semanário
+            </a>
+            {% endif %}
+
+            <button
+                class="botao-link"
+                type="button"
+                onclick="window.print()"
+            >
+                Imprimir ou salvar em PDF
+            </button>
+
+            {% if (
+                session.get("usuario_perfil") == "professora"
+                and semanario["usuario_id"] == session.get("usuario_id")
+            ) %}
+            <form
+                method="post"
+                action="{{ url_for(
+                    'excluir_semanario',
+                    semanario_id=semanario['id']
+                ) }}"
+                onsubmit="return confirm(
+                    'Excluir este semanário? Esta ação não pode ser desfeita.'
+                );"
+            >
+                <button class="botao-perigo" type="submit">
+                    Excluir semanário
+                </button>
+            </form>
+            {% endif %}
+        </nav>
         <div class="cabecalho-pagina">
             <div>
                 <h2>{{ semanario["turma"] }}</h2>
@@ -81,6 +112,23 @@
                     {{ semanario["inicio_semana"][8:10] }}/{{ semanario["inicio_semana"][5:7] }}/{{ semanario["inicio_semana"][0:4] }}
                 </dd>
             </div>
+
+                        <div>
+                <dt>Salvo em</dt>
+                <dd>
+                    {{ semanario["criado_em"] | data_hora_brasilia }}
+                </dd>
+            </div>
+
+            {% if semanario["atualizado_em"] %}
+            <div>
+                <dt>Última edição</dt>
+                <dd>
+                    {{ semanario["atualizado_em"] | data_hora_brasilia }}
+                </dd>
+            </div>
+            {% endif %}
+
         </dl>
 
         <section class="semana" aria-labelledby="titulo-registros">

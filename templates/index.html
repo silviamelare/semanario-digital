@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semanário Digital</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=6) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=8) }}">
 </head>
 <body>
     <a class="pular-conteudo" href="#conteudo-principal">
@@ -59,13 +59,20 @@
                 <div class="campo">
                     <label for="professora">Professora</label>
                     <input
+                        <input
     type="text"
     id="professora"
     name="professora"
     value="{{ session['usuario_nome'] }}"
     readonly
     required
+    aria-describedby="ajuda-professora"
 >
+
+                    <small id="ajuda-professora">
+                        O nome vem da conta conectada e não pode ser alterado aqui.
+                    </small>
+
                 </div>
 
                 <div class="campo">

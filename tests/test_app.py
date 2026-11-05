@@ -585,3 +585,225 @@ def test_professora_nao_exclui_foto_de_outra(cliente):
 
     assert foto_apos_tentativa is not None
     assert caminho_foto.exists()
+
+def test_professora_pesquisa_proprios_semanarios_por_data(cliente):
+    cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+
+    outros_dados = dados_validos()
+    outros_dados["turma"] = "Orquídea"
+    outros_dados["inicio_semana"] = "2026-09-07"
+
+    cliente.post(
+        "/api/semanarios",
+        data=outros_dados,
+    )
+
+    resposta = cliente.get(
+        "/semanarios?data=2026-09-07"
+    )
+    html = resposta.get_data(as_text=True)
+
+    assert resposta.status_code == 200
+    assert "Orquídea" in html
+    assert "Girassol" not in html
+
+
+def test_professora_nao_ve_semanario_de_outra(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    outra_professora_id = database.cadastrar_usuario(
+        "Outra Professora da Lista",
+        "RF_OUTRA_LISTA_001",
+        "SenhaTeste-4",
+        "professora",
+    )
+
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_id"] = outra_professora_id
+        sessao["usuario_nome"] = "Outra Professora da Lista"
+        sessao["usuario_perfil"] = "professora"
+
+    resposta_lista = cliente.get("/semanarios")
+    resposta_detalhe = cliente.get(
+        f"/semanarios/{semanario_id}"
+    )
+
+    html_lista = resposta_lista.get_data(
+        as_text=True
+    )
+
+    assert "Girassol" not in html_lista
+    assert resposta_detalhe.status_code == 404
+
+def test_professora_exclui_proprio_semanario(cliente):
+    dados = dados_validos()
+    dados["fotos"] = [
+        (
+            BytesIO(b"foto-do-semanario"),
+            "foto-semanario.jpg",
+        ),
+    ]
+
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados,
+        content_type="multipart/form-data",
+    )
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    with database.conectar() as conexao:
+        caminho = conexao.execute(
+            """
+            SELECT caminho
+            FROM fotos
+            WHERE semanario_id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()["caminho"]
+
+    caminho_foto = modulo_app.PASTA_UPLOADS / caminho
+    assert caminho_foto.exists()
+
+    resposta = cliente.post(
+        f"/semanarios/{semanario_id}/excluir"
+    )
+
+    assert resposta.status_code == 302
+    assert "excluido=1" in resposta.headers["Location"]
+
+    with database.conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT id
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+        registros = conexao.execute(
+            """
+            SELECT COUNT(*)
+            FROM registros_diarios
+            WHERE semanario_id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()[0]
+
+    assert semanario is None
+    assert registros == 0
+    assert not caminho_foto.exists()
+
+
+def test_professora_nao_exclui_semanario_de_outra(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    outra_professora_id = database.cadastrar_usuario(
+        "Professora Sem Exclusão",
+        "RF_SEM_EXCLUSAO_001",
+        "SenhaTeste-5",
+        "professora",
+    )
+
+    with cliente.session_transaction() as sessao:
+        sessao["usuario_id"] = outra_professora_id
+        sessao["usuario_nome"] = "Professora Sem Exclusão"
+        sessao["usuario_perfil"] = "professora"
+
+    resposta = cliente.post(
+        f"/semanarios/{semanario_id}/excluir"
+    )
+
+    assert resposta.status_code == 404
+
+    with database.conectar() as conexao:
+        semanario = conexao.execute(
+            """
+            SELECT id
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert semanario is not None
+
+def test_detalhe_mostra_impressao_e_exclusao(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    resposta = cliente.get(
+        f"/semanarios/{semanario_id}"
+    )
+    html = resposta.get_data(as_text=True)
+
+    assert resposta.status_code == 200
+    assert "Imprimir ou salvar em PDF" in html
+    assert "Excluir semanário" in html
+    assert "window.print()" in html
+
+
+def test_sistema_registra_criacao_e_ultima_edicao(cliente):
+    resposta_criacao = cliente.post(
+        "/api/semanarios",
+        data=dados_validos(),
+    )
+    semanario_id = resposta_criacao.get_json()["id"]
+
+    with database.conectar() as conexao:
+        antes = conexao.execute(
+            """
+            SELECT criado_em, atualizado_em
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert antes["criado_em"] is not None
+    assert antes["atualizado_em"] is None
+
+    dados_editados = dados_validos()
+    dados_editados["turma"] = "Turma com horário"
+
+    resposta_edicao = cliente.post(
+        f"/api/semanarios/{semanario_id}",
+        data=dados_editados,
+    )
+
+    assert resposta_edicao.status_code == 200
+
+    with database.conectar() as conexao:
+        depois = conexao.execute(
+            """
+            SELECT criado_em, atualizado_em
+            FROM semanarios
+            WHERE id = ?
+            """,
+            (semanario_id,),
+        ).fetchone()
+
+    assert depois["criado_em"] == antes["criado_em"]
+    assert depois["atualizado_em"] is not None
+
+    resposta_detalhe = cliente.get(
+        f"/semanarios/{semanario_id}"
+    )
+    html = resposta_detalhe.get_data(as_text=True)
+
+    assert "Salvo em" in html
+    assert "Última edição" in html

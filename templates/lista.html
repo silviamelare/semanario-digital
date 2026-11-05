@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semanários salvos</title>
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+          href="{{ url_for('static', filename='css/style.css', v=8) }}">
 </head>
 <body>
         {% set periodos = {
@@ -35,6 +35,39 @@
             </a>
         </div>
 
+                {% if request.args.get("excluido") == "1" %}
+        <p class="mensagem-sucesso" role="status">
+            Semanário excluído com sucesso.
+        </p>
+        {% endif %}
+
+        <form class="filtro-semanarios" method="get">
+            <div class="campo">
+                <label for="data">
+                    Pesquisar pela data de início
+                </label>
+
+                <input
+                    type="date"
+                    id="data"
+                    name="data"
+                    value="{{ data_busca }}"
+                >
+            </div>
+
+            <button type="submit">
+                Pesquisar
+            </button>
+
+            {% if data_busca %}
+            <a
+                class="botao-secundario"
+                href="{{ url_for('listar_semanarios') }}"
+            >
+                Limpar pesquisa
+            </a>
+            {% endif %}
+        </form>
         {% if semanarios %}
         <div class="lista-semanarios">
             {% for semanario in semanarios %}
@@ -69,6 +102,23 @@
     {{ semanario["inicio_semana"][8:10] }}/{{ semanario["inicio_semana"][5:7] }}/{{ semanario["inicio_semana"][0:4] }}
 </dd>
                     </div>
+
+                                        <div>
+                        <dt>Salvo em</dt>
+                        <dd>
+                            {{ semanario["criado_em"] | data_hora_brasilia }}
+                        </dd>
+                    </div>
+
+                    {% if semanario["atualizado_em"] %}
+                    <div>
+                        <dt>Última edição</dt>
+                        <dd>
+                            {{ semanario["atualizado_em"] | data_hora_brasilia }}
+                        </dd>
+                    </div>
+                    {% endif %}
+
                 </dl>
 
                 <a class="abrir-semanario"
@@ -82,8 +132,12 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="estado-vazio">
-            Nenhum semanário foi salvo ainda.
+                <p class="estado-vazio">
+            {% if data_busca %}
+                Nenhum semanário foi encontrado nessa data.
+            {% else %}
+                Nenhum semanário foi salvo ainda.
+            {% endif %}
         </p>
         {% endif %}
     </main>
